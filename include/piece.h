@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-static const char* PIECE_FACES[] = {
+/*static const char* PIECE_FACES[] = {
     //WHITE
     "♙",
     "♖",
@@ -19,7 +19,7 @@ static const char* PIECE_FACES[] = {
     "♝",
     "♛",
     "♚"
-};
+};*/
 
 typedef enum Piece {
     PAWN,

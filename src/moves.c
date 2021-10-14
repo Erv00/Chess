@@ -1,6 +1,8 @@
 #include "moves.h"
 
 #include "piece.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 void movePiece(Board *board, Move move){
     board->Cell[move.to.rank][move.to.file] = at(board, move.from);
@@ -34,13 +36,14 @@ bool isValidMove(Board *board, Move move){
     case ROOK:
         return checkRookMove(board, move);
     case KNIGHT:
-        //return checkKnightMove(board, move);
+        return checkKnightMove(board, move);
     case BISHOP:
         return checkBishopMove(board, move);
     case QUEEN:
-        //return checkQueenMove(board, move);
+        return checkQueenMove(board, move);
     case KING:
         return checkKingMove(board, move);
+    //No need for default, as previous conditions ensure only the above are possible
     }
 
     return true;
@@ -113,7 +116,18 @@ bool checkRookMove(Board *board, Move move){
     return true;
 }
 
-bool checkKnightMove(Board *board, Move move);
+bool checkKnightMove(Board *board, Move move){
+    static const int KNIGHT_OFFSETS[] = {6, 10, 15, 17};
+    int diff = abs(toSquareID(move.to) - toSquareID(move.from));
+
+    for(int i = 0; i < 4; i++){
+        if(diff == KNIGHT_OFFSETS[i]){
+            return true;
+        }
+    }
+
+    return false;
+}
 
 bool checkBishopMove(Board *board, Move move){
     //Check if diagnal move
@@ -134,7 +148,10 @@ bool checkBishopMove(Board *board, Move move){
 
     return true;
 }
-bool checkQueenMove(Board *board, Move move);
+
+bool checkQueenMove(Board *board, Move move){
+    return checkBishopMove(board, move) || checkRookMove(board, move);
+}
 
 bool checkKingMove(Board *board, Move move){
     return nonEuclideanDistance(move.from, move.to) == 1;

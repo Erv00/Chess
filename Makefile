@@ -1,11 +1,8 @@
 CC=gcc
-CFLAGS=-I./include -ggdb
+CFLAGS=-I./include -ggdb -Wall -Wextra -pedantic
 LDFLAGS=-lm
 sources=$(wildcard src/*.c)
 objects=$(sources:src/%.c=obj/%.o)
-
-run: bin
-	./chess
 
 bin: $(objects)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o chess

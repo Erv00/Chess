@@ -2,6 +2,24 @@
 
 #include <stdio.h>
 
+static const char* PIECE_FACES[] = {
+    //WHITE
+    "♙",
+    "♖",
+    "♘",
+    "♗",
+    "♕",
+    "♔",
+
+    //BLACK
+    "♟︎",
+    "♜",
+    "♞",
+    "♝",
+    "♛",
+    "♚"
+};
+
 bool isBlack(Piece p){
     return p & COLOR_BLACK;
 }
@@ -41,7 +59,7 @@ bool isValidPiece(Piece p){
 const char* getPieceFace(Piece p){
     char offset = isBlack(p) ? 6 : 0;
     Piece pCode = p & 7;
-    for(int i = 0;i < 6;i++){
+    for(unsigned int i = 0;i < 6;i++){
         if(pCode == i){
             return PIECE_FACES[i+offset];
         }
