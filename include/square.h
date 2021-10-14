@@ -22,5 +22,10 @@ int filesToLeft(Square square);
 int filesToRight(Square square);
 
 //Returnes a square so that it's one step towards to
-Square stepStraight(Square from, Square to);
+//Should only be used when in a straight line or in a diagonal
+Square stepToward(Square from, Square to);
+
+//Returnes the non-euclidean distance of a and b, such that
+//the return value is = max(deltaX, deltaY) 
+int nonEuclideanDistance(Square a, Square b);
 #endif

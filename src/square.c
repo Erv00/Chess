@@ -1,6 +1,6 @@
 #include "square.h"
 
-#include <math.h>
+#include <stdlib.h>
 
 bool isValidSquare(Square square){
     return  (0 <= square.rank && square.rank < 8) &&
@@ -15,11 +15,12 @@ int toSquareID(Square square){
     return square.rank*8+square.file;
 }
 
-Square stepStraight(Square from, Square to){
+Square stepToward(Square from, Square to){
     if(isSame(from, to))
         return from;
     
-    int rankDir = (to.rank - from.rank);
+    //One will always be zero
+    int rankDir = to.rank - from.rank;
     int fileDir = to.file - from.file;
     
     //Normalize if needed
@@ -32,4 +33,13 @@ Square stepStraight(Square from, Square to){
     ret.rank = from.rank + rankDir;
     ret.file = from.file + fileDir;
     return ret;
+}
+
+int nonEuclideanDistance(Square a, Square b){
+    int rankDist = abs(a.rank - b.rank);
+    int fileDist = abs(a.file - b.file);
+    if(rankDist >= fileDist)
+        return rankDist;
+    return fileDist;
+    
 }

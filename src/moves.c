@@ -36,11 +36,11 @@ bool isValidMove(Board *board, Move move){
     case KNIGHT:
         //return checkKnightMove(board, move);
     case BISHOP:
-        //return checkBishopMove(board, move);
+        return checkBishopMove(board, move);
     case QUEEN:
         //return checkQueenMove(board, move);
     case KING:
-        //return checkKingMove(board, move);
+        return checkKingMove(board, move);
     }
 
     return true;
@@ -102,18 +102,40 @@ bool checkRookMove(Board *board, Move move){
     }
 
     //Check if path is free
-    Square current = stepStraight(move.from, move.to);
+    Square current = stepToward(move.from, move.to);
     while(!isSame(current, move.to)){
         if(!isFreeAt(board, current)){
             return false;
         }
-        current = stepStraight(current, move.to);
+        current = stepToward(current, move.to);
     }
 
     return true;
 }
 
 bool checkKnightMove(Board *board, Move move);
-bool checkBishopMove(Board *board, Move move);
+
+bool checkBishopMove(Board *board, Move move){
+    //Check if diagnal move
+    //This works beacuse of maths, see documentation
+    int diff = toSquareID(move.from) - toSquareID(move.to);
+    if(diff % 7 != 0 && diff % 9 != 0){
+        return false;
+    }
+
+    //Check if path is free
+    Square current = stepToward(move.from, move.to);
+    while(!isSame(current, move.to)){
+        if(!isFreeAt(board, current)){
+            return false;
+        }
+        current = stepToward(current, move.to);
+    }
+
+    return true;
+}
 bool checkQueenMove(Board *board, Move move);
-bool checkKingMove(Board *board, Move move);
+
+bool checkKingMove(Board *board, Move move){
+    return nonEuclideanDistance(move.from, move.to) == 1;
+}
