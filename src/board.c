@@ -53,6 +53,7 @@ void processFENPieceData(Board *board, const char *fenStr){
 Board* newGameFromFen(const char* fenStr){
     Board *b = calloc(1,sizeof(Board));
     processFENPieceData(b, fenStr);
+    b->NextIsWhite = true;
     return b;
 }
 
@@ -63,17 +64,78 @@ Board* newGameFromStart(){
 
 //Prints the board
 void printBoard(Board *board){
-    //econio_textcolor(COL_BLACK);
-    //econio_textbackground(COL_WHITE);
+    econio_clrscr();
     printf(" abcdefgh\n");
     for(int rank = 7; rank >= 0; rank--){
         printf("%d", rank+1);
         for(int file = 0; file < 8; file++){
             Piece p = board->Cell[rank][file];
-            if(isValidPiece(p))
+            if(isValidPiece(p)){
                 printf(getPieceFace(p));
+            } else {
+                printf(" ");
+            }
         }
-        printf("\n");
+        printf("%d\n",rank+1);
     }
     printf(" abcdefgh\n");
+}
+
+Piece at(Board *board, Square square){
+    return board->Cell[square.rank][square.file];
+}
+
+bool isFreeAt(Board *board, Square square){
+    return !isValidPieceAt(board, square);
+}
+
+bool isBlackAt(Board *board, Square square){
+    return isBlack(at(board, square));
+}
+
+bool isWhiteAt(Board *board, Square square){
+    return isWhite(at(board, square));
+}
+
+bool isPawnAt(Board *board, Square square){
+    return isPawn(at(board, square));
+}
+
+bool isRookAt(Board *board, Square square){
+    return isRook(at(board, square));
+}
+
+bool isKnightAt(Board *board, Square square){
+    return isKnight(at(board, square));
+}
+
+bool isBishopAt(Board *board, Square square){
+    return isBishop(at(board, square));
+}
+
+bool isQueenAt(Board *board, Square square){
+    return isQueen(at(board, square));
+}
+
+bool isKingAt(Board *board, Square square){
+    return isKing(at(board, square));
+}
+
+bool isValidPieceAt(Board *board, Square square){
+    return isValidPiece(at(board, square));
+}
+
+bool isOpponent(Board *board, Piece piece){
+    if(board->NextIsWhite){
+        return isBlack(piece);
+    }
+    return isWhite(piece);
+}
+
+bool isOpponentAt(Board *board, Square square){
+    if(!isValidPieceAt(board, square)){
+        return false;
+    }
+    //There is a piece, is it opponent's
+    return isOpponent(board, at(board, square));
 }
