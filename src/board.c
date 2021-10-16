@@ -1,12 +1,13 @@
 #include "board.h"
 #include "piece.h"
+#include "algebraic.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <econio.h>
 
-void processFENPieceData(Board *board, const char *fenStr){
+const char* processFENPieceData(Board *board, const char *fenStr){
     //Pieces
     int rank = 7, file = 0;
     while(*fenStr != ' '){
@@ -43,17 +44,67 @@ void processFENPieceData(Board *board, const char *fenStr){
                 printf("Unknown character in FEN string: %c\n", *fenStr);
             }
     
-            board->Cell[rank][file] = piece;
+            board->cell[rank][file] = piece;
             file++;
         }
         fenStr++;
     }
+
+    //++ to point to next fen-data
+    return ++fenStr;
+}
+
+const char* processFENCastlingData(Board *b, const char *fenStr){
+    if(*fenStr == '-')
+        return fenStr+2;
+    
+    while(*fenStr != ' '){
+        switch(*fenStr++){
+        case 'K':
+            b->castlingAvailability |= 1;
+            break;
+        case 'Q':
+            b->castlingAvailability |= 2;
+            break;
+        case 'k':
+            b->castlingAvailability |= 4;
+            break;
+        case 'q':
+            b->castlingAvailability |= 8;
+            break;    
+        }
+    }
+    return ++fenStr;
+}
+
+const char* processFENEnPassanteData(Board *b, const char *fenStr){
+    if(*fenStr == '-'){
+        b->enPassante.rank = -1;
+        b->enPassante.file = -1;
+        return fenStr+2;
+    }
+    
+    char algebraic[2];
+    algebraic[0] = *fenStr++;
+    algebraic[1] = *fenStr++;
+
+    b->enPassante = algebraicToSquare(algebraic);
+
+    return ++fenStr;
 }
 
 Board* newGameFromFen(const char* fenStr){
     Board *b = calloc(1,sizeof(Board));
-    processFENPieceData(b, fenStr);
-    b->NextIsWhite = true;
+    fenStr = processFENPieceData(b, fenStr);
+    if(*fenStr++ == 'w')
+        b->nextIsWhite = true;
+    else
+        b->nextIsWhite = false;
+    fenStr++;
+    fenStr = processFENCastlingData(b, fenStr);
+    fenStr = processFENEnPassanteData(b, fenStr);
+    //Half and full-moves
+    sscanf(fenStr, "%d %d", &b->halfmoveClock, &b->fullmoveCounter);
     return b;
 }
 
@@ -69,7 +120,7 @@ void printBoard(Board *board){
     for(int rank = 7; rank >= 0; rank--){
         printf("%d", rank+1);
         for(int file = 0; file < 8; file++){
-            Piece p = board->Cell[rank][file];
+            Piece p = board->cell[rank][file];
             if(isValidPiece(p)){
                 printf(getPieceFace(p));
             } else {
@@ -79,10 +130,20 @@ void printBoard(Board *board){
         printf("%d\n",rank+1);
     }
     printf(" abcdefgh\n");
+
+        econio_gotoxy(11,0);
+    if(isValidSquare(board->enPassante)){
+        char alg[3] = {0};
+        squareToAlgebraic(board->enPassante, alg);
+        printf("En passante: %s\n", alg);
+    }else{
+        printf("En passante: -\n");
+    }
+    econio_gotoxy(0,11);
 }
 
 Piece at(Board *board, Square square){
-    return board->Cell[square.rank][square.file];
+    return board->cell[square.rank][square.file];
 }
 
 bool isFreeAt(Board *board, Square square){
@@ -126,7 +187,7 @@ bool isValidPieceAt(Board *board, Square square){
 }
 
 bool isOpponent(Board *board, Piece piece){
-    if(board->NextIsWhite){
+    if(board->nextIsWhite){
         return isBlack(piece);
     }
     return isWhite(piece);

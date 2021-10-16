@@ -5,34 +5,60 @@
 #include <stdio.h>
 
 void movePiece(Board *board, Move move){
-    board->Cell[move.to.rank][move.to.file] = at(board, move.from);
-    board->Cell[move.from.rank][move.from.file] = 0;
+    board->cell[move.to.rank][move.to.file] = at(board, move.from);
+    board->cell[move.from.rank][move.from.file] = 0;
 }
 
-bool isValidMove(Board *board, Move move){
+void movePieceWithCheck(Board *board, Move move){
+    Square enPassante = {-1, -1};
+    Move rookMove = {.from.rank = -1};
+    int newCastlingAvailability;
+    if(!isValidMove(board, move, &enPassante, &rookMove, &newCastlingAvailability))
+        return;
+    
+    //Check if hitting en passante
+    if(isPawnAt(board, move.from) && isSame(move.to, board->enPassante)){
+        //Take en passantable pawn
+        if(board->nextIsWhite)
+            //White moved, must take black pawn
+            board->cell[move.to.rank-1][move.to.file] = 0;
+        else
+            //Black moved. must take white pawn
+            board->cell[move.to.rank+1][move.to.file] = 0;
+    }
+    
+    //En passante resets with every move
+    board->enPassante = enPassante;
+
+    //Castling
+    if(rookMove.from.rank != -1){
+        movePiece(board, rookMove);
+        board->castlingAvailability = newCastlingAvailability;
+    }
+    movePiece(board, move);
+}
+
+bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, int *newCastlingAvailability){
     //Basic checks
     //Is in-bounds?
     if(!isValidSquare(move.from) || !isValidSquare(move.to)){
         return false;
     }
 
-    //Is there a piece there?
-    if(isFreeAt(board, move.from)){
+    //Is there a friendly piece to move?
+    if(isFreeAt(board, move.from) || isOpponentAt(board, move.from)){
         return false;
     }
 
     //Is the destination occupied by a friendly piece?
-    if(!isFreeAt(board, move.to)){
-        //Space is NOT free
-        if(!isOpponentAt(board, move.to)){
-            return false;
-        }
+    if(!isFreeAt(board, move.to) && !isOpponentAt(board, move.to)){
+        return false;
     }
 
     Piece toMove = at(board, move.from) & 7; //&7 to only select piece type, not color
     switch(toMove){
     case PAWN:
-        return checkPawnMove(board, move);
+        return checkPawnMove(board, move, enPassante);
     case ROOK:
         return checkRookMove(board, move);
     case KNIGHT:
@@ -42,21 +68,21 @@ bool isValidMove(Board *board, Move move){
     case QUEEN:
         return checkQueenMove(board, move);
     case KING:
-        return checkKingMove(board, move);
+        return checkKingMove(board, move, rookMove, newCastlingAvailability);
     //No need for default, as previous conditions ensure only the above are possible
     }
 
     return true;
 }
 
-bool checkPawnMove(Board *board, Move move){
+bool checkPawnMove(Board *board, Move move, Square *enPassante){
     int from = toSquareID(move.from);
     int to = toSquareID(move.to);
 
     int diff = to-from;
 
     //Check for backward moves
-    if(board->NextIsWhite){
+    if(board->nextIsWhite){
         if(to <= from){
             return false;
         }
@@ -91,9 +117,15 @@ bool checkPawnMove(Board *board, Move move){
         Square middle;
         middle.rank = (move.to.rank + move.from.rank) / 2; //Sum is always integer because this is a 2 square advance
         middle.file = move.to.file; //File doesn't change
-        return isFreeAt(board, move.to) && isFreeAt(board, middle);
+        bool isValid = isFreeAt(board, move.to) && isFreeAt(board, middle);
+
+        //Save en passantable square
+        if(isValid && enPassante != NULL)
+            *enPassante = middle;
+        
+        return isValid;
     } else {
-        return isOpponentAt(board, move.to);
+        return isOpponentAt(board, move.to) || isSame(move.to, board->enPassante);
     }
 
 }
@@ -153,6 +185,35 @@ bool checkQueenMove(Board *board, Move move){
     return checkBishopMove(board, move) || checkRookMove(board, move);
 }
 
-bool checkKingMove(Board *board, Move move){
-    return nonEuclideanDistance(move.from, move.to) == 1;
+bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvailability){
+    int dist = nonEuclideanDistance(move.from, move.to);
+    if(dist == 1)
+        return true;
+    
+    if(dist != 2)
+        return false;
+    
+    //Check for castling
+    if(move.from.rank != move.to.rank)
+        return false;
+    
+    int kingside = move.from.file < move.to.file ? 0 : 1;
+    int white = board->nextIsWhite ? 0 : 2;
+
+    int castlingID = white+kingside;
+
+    bool isValid = board->castlingAvailability & (1 << castlingID);
+
+    if(isValid && castling != NULL){
+        castling->from.rank = move.to.rank;
+        castling->to.rank = move.to.rank;
+        //Select correct rook
+        castling->from.file = kingside ? 0 : 7;
+        //Select file
+        castling->to.file = !kingside ? move.to.file-1 : move.to.file+1;
+        if(newCastlingAvailability != NULL)
+            *newCastlingAvailability = board->castlingAvailability ^ (1 << castlingID);
+    }
+
+    return isValid;
 }

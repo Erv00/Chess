@@ -2,25 +2,26 @@
 
 #include "board.h"
 #include "moves.h"
+#include "algebraic.h"
 
 int main(void){
     Move m;
-    char ff,fr,tf,tr;
+    char moveData[4];
 
     Board *b = newGameFromStart();
     printBoard(b);
     while(true){
-        scanf("%c%c %c%c%*c", &ff, &fr, &tf, &tr);
-        if(ff == 'q'){
+        scanf("%2s %2s", moveData, moveData+2);
+        while (getchar() != '\n');
+        if(*moveData == 'q'){
             return 0;
         }
-        m.from.file = ff-'a';
-        m.to.file = tf-'a';
-        m.from.rank = fr-'1';
-        m.to.rank = tr-'1';
-        if(isValidMove(b, m)){
-            movePiece(b, m);
+        m.from = algebraicToSquare(moveData);
+        m.to = algebraicToSquare(moveData+2);
+        if(isValidMove(b, m, NULL, NULL, NULL)){
+            movePieceWithCheck(b, m);
             printBoard(b);
+            b->nextIsWhite = !b->nextIsWhite;
         }else{
             printf("Invalid move\n");
         }

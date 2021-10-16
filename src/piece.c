@@ -59,9 +59,9 @@ bool isValidPiece(Piece p){
 const char* getPieceFace(Piece p){
     char offset = isBlack(p) ? 6 : 0;
     Piece pCode = p & 7;
-    for(unsigned int i = 0;i < 6;i++){
+    for(unsigned int i = 0;i < 7;i++){
         if(pCode == i){
-            return PIECE_FACES[i+offset];
+            return PIECE_FACES[i+offset-1]; //-1 because PAWN = 1
         }
     }
     fprintf(stderr, "No such piece: %d\n", p);
