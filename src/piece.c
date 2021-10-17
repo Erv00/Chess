@@ -21,35 +21,35 @@ static const char* PIECE_FACES[] = {
 };
 
 bool isBlack(Piece p){
-    return p & COLOR_BLACK;
+    return (p & 24) == COLOR_BLACK;
 }
 
 bool isWhite(Piece p){
-    return p & COLOR_WHITE;
+    return (p & 24) == COLOR_WHITE;
 }
 
 bool isPawn(Piece p){
-    return p & PAWN;
+    return (p & 7) == PAWN;
 }
 
 bool isRook(Piece p){
-    return p & ROOK;
+    return (p & 7) == ROOK;
 }
 
 bool isKnight(Piece p){
-    return p & KNIGHT;
+    return (p & 7) == KNIGHT;
 }
 
 bool isBishop(Piece p){
-    return p & BISHOP;
+    return (p & 7) == BISHOP;
 }
 
 bool isQueen(Piece p){
-    return p & QUEEN;
+    return (p & 7) == QUEEN;
 }
 
 bool isKing(Piece p){
-    return p & KING;
+    return (p & 7) == KING;
 }
 
 bool isValidPiece(Piece p){
@@ -61,7 +61,7 @@ const char* getPieceFace(Piece p){
     Piece pCode = p & 7;
     for(unsigned int i = 0;i < 7;i++){
         if(pCode == i){
-            return PIECE_FACES[i+offset-1]; //-1 because PAWN = 1
+            return PIECE_FACES[i+offset];
         }
     }
     fprintf(stderr, "No such piece: %d\n", p);

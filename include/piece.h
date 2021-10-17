@@ -22,7 +22,7 @@
 };*/
 
 typedef enum Piece {
-    PAWN = 1,
+    PAWN,
     ROOK,
     KNIGHT,
     BISHOP,
