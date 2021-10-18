@@ -1,6 +1,8 @@
 #include "moves.h"
 
 #include "piece.h"
+#include "check.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -95,10 +97,10 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
     bool whiteCheck = false, blackCheck = false;
     willNextMoveBeCheck(board, move, &whiteCheck, &blackCheck);
         if(board->nextIsWhite && whiteCheck)
-            //White cannot move to pot themselves in check
+            //White cannot move to put themselves in check
             return false;
         if(!board->nextIsWhite && blackCheck)
-            //Black cannot move to pot themselves in check
+            //Black cannot move to put themselves in check
             return false;
     }
     return true;

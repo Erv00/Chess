@@ -50,10 +50,4 @@ bool isOpponentAt(Board *board, Square square);
 //Returnes true if the piece is the opponents
 bool isOpponent(Board *board, Piece piece);
 
-//Sets the two pointed bools if the respective color is in check
-//Any pointer may be NULL
-void isInCheck(Board *board, bool *isWhiteInCheck, bool *isBlackInCheck);
-
-void willNextMoveBeCheck(Board *b, Move move, bool *isWhiteInCheck, bool *isBlackInCheck);
-
 #endif
