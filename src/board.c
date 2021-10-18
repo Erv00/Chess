@@ -1,6 +1,7 @@
 #include "board.h"
 #include "piece.h"
 #include "algebraic.h"
+#include "moves.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -39,6 +40,13 @@ const char* processFENPieceData(Board *board, const char *fenStr){
                 break;
             case 'k':
                 piece |= KING;
+                if(isWhite(piece)){
+                    board->whiteKing.rank = rank;
+                    board->whiteKing.file = file;
+                }else{
+                    board->blackKing.rank = rank;
+                    board->blackKing.file = file;
+                }
                 break;
             default:
                 printf("Unknown character in FEN string: %c\n", *fenStr);
@@ -139,6 +147,13 @@ void printBoard(Board *board){
     }else{
         printf("En passante: -\n");
     }
+    bool wC, bC;
+    isInCheck(board, &wC, &bC);
+    econio_gotoxy(11,1);
+    printf("White is %sin check\n", wC ? "" : "not ");
+    econio_gotoxy(11,2);
+    printf("Black is %sin check\n", bC ? "" : "not ");
+
     econio_gotoxy(0,11);
 }
 
@@ -199,4 +214,41 @@ bool isOpponentAt(Board *board, Square square){
     }
     //There is a piece, is it opponent's
     return isOpponent(board, at(board, square));
+}
+
+void isInCheck(Board *board, bool *whiteInCheck, bool *blackInCheck){
+    for(int rank = 0; rank < 8; rank++){
+        for(int file = 0; file < 8; file++){
+            Square s = {.rank = rank, .file = file};
+            if(isSame(s, board->whiteKing) || isSame(s, board->blackKing)){
+                //No need to check kings
+                continue;
+            }
+            if(isValidPieceAt(board, s)){
+                if(isWhiteAt(board, s) && blackInCheck != NULL){
+                    //Check if white can hit black
+                    Move m = {
+                        .from = s,
+                        .to = board->blackKing
+                    };
+
+                    *blackInCheck |= isValidMove(board, m, NULL, NULL, NULL);                    
+                } else if(isBlackAt(board, s) && whiteInCheck != NULL){
+                    Move m = {
+                        .from = s,
+                        .to = board->whiteKing
+                    };
+
+                    *whiteInCheck |= isValidMove(board, m, NULL, NULL, NULL);
+                }
+            }
+        }
+    }
+}
+
+void willNextMoveBeCheck(Board *b, Move move, bool *isWhiteInCheck, bool *isBlackInCheck){
+    Board copy = *b; //Copy structure
+    movePiece(&copy, move);
+    copy.nextIsWhite = !copy.nextIsWhite;
+    isInCheck(&copy, isWhiteInCheck, isBlackInCheck);
 }

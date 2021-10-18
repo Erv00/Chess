@@ -8,6 +8,8 @@
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+typedef struct Move Move;
+
 typedef struct Board {
     char cell[8][8];
     bool nextIsWhite;
@@ -15,6 +17,8 @@ typedef struct Board {
     Square enPassante;
     int halfmoveClock;
     int fullmoveCounter;
+    Square whiteKing;
+    Square blackKing;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game
@@ -45,5 +49,11 @@ bool isValidPieceAt(Board *board, Square square);
 bool isOpponentAt(Board *board, Square square);
 //Returnes true if the piece is the opponents
 bool isOpponent(Board *board, Piece piece);
+
+//Sets the two pointed bools if the respective color is in check
+//Any pointer may be NULL
+void isInCheck(Board *board, bool *isWhiteInCheck, bool *isBlackInCheck);
+
+void willNextMoveBeCheck(Board *b, Move move, bool *isWhiteInCheck, bool *isBlackInCheck);
 
 #endif

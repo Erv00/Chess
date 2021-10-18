@@ -5,6 +5,13 @@
 #include <stdio.h>
 
 void movePiece(Board *board, Move move){
+    if(isKingAt(board, move.from)){
+        if(isWhiteAt(board, move.from)){
+            board->whiteKing = move.to;
+        }else{
+            board->blackKing = move.to;
+        }
+    }
     board->cell[move.to.rank][move.to.file] = at(board, move.from);
     board->cell[move.from.rank][move.from.file] = 0;
 }
@@ -55,23 +62,45 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
         return false;
     }
 
+    bool valid = false;
     Piece toMove = at(board, move.from) & 7; //&7 to only select piece type, not color
     switch(toMove){
     case PAWN:
-        return checkPawnMove(board, move, enPassante);
+        valid = checkPawnMove(board, move, enPassante);
+        break;
     case ROOK:
-        return checkRookMove(board, move);
+        valid = checkRookMove(board, move);
+        break;
     case KNIGHT:
-        return checkKnightMove(board, move);
+        valid = checkKnightMove(board, move);
+        break;
     case BISHOP:
-        return checkBishopMove(board, move);
+        valid = checkBishopMove(board, move);
+        break;
     case QUEEN:
-        return checkQueenMove(board, move);
+        valid = checkQueenMove(board, move);
+        break;
     case KING:
-        return checkKingMove(board, move, rookMove, newCastlingAvailability);
+        valid = checkKingMove(board, move, rookMove, newCastlingAvailability);
+        break;
     //No need for default, as previous conditions ensure only the above are possible
     }
 
+    if(!valid)
+        return false;
+    
+    //Move may be valid, check if it will result in a check
+    //Only check if not already checking if it's a king hit
+    if(!isSame(move.to, board->whiteKing) && !isSame(move.to, board->blackKing)){
+    bool whiteCheck = false, blackCheck = false;
+    willNextMoveBeCheck(board, move, &whiteCheck, &blackCheck);
+        if(board->nextIsWhite && whiteCheck)
+            //White cannot move to pot themselves in check
+            return false;
+        if(!board->nextIsWhite && blackCheck)
+            //Black cannot move to pot themselves in check
+            return false;
+    }
     return true;
 }
 
