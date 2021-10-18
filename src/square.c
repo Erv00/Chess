@@ -15,6 +15,14 @@ int toSquareID(Square square){
     return square.rank*8+square.file;
 }
 
+Square fromSquareID(int squareID){
+    Square sq = {
+        .rank = squareID / 8,
+        .file = squareID % 8
+    };
+    return sq;
+}
+
 Square stepToward(Square from, Square to){
     if(isSame(from, to))
         return from;

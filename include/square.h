@@ -14,6 +14,7 @@ bool isSame(Square a, Square b);
 
 //Returnes the numeric ID of a square [0,64) from a1 to h8
 int toSquareID(Square square);
+Square fromSquareID(int squareID);
 
 int ranksToTop(Square square);
 int ranksToBottom(Square square);

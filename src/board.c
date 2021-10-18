@@ -148,12 +148,18 @@ void printBoard(Board *board){
     }else{
         printf("En passante: -\n");
     }
-    bool wC, bC;
-    isInCheck(board, &wC, &bC);
+
+    //Check
+    CheckDataByColor cd = isBoardInCheck(board);
     econio_gotoxy(11,1);
-    printf("White is %sin check\n", wC ? "" : "not ");
+    printf("White is %sin check\n", cd.white.inCheck ? "" : "not ");
     econio_gotoxy(11,2);
-    printf("Black is %sin check\n", bC ? "" : "not ");
+    printf("Black is %sin check\n", cd.black.inCheck ? "" : "not ");
+    if(cd.white.inCheck || cd.black.inCheck){
+        if(isCheckmate(board)){
+            printf("CHECKMATE\n");
+        }
+    }
 
     econio_gotoxy(0,11);
 }

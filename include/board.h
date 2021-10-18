@@ -19,6 +19,7 @@ typedef struct Board {
     int fullmoveCounter;
     Square whiteKing;
     Square blackKing;
+    bool checkmate;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game

@@ -45,6 +45,15 @@ void movePieceWithCheck(Board *board, Move move){
         board->castlingAvailability = newCastlingAvailability;
     }
     movePiece(board, move);
+    board->nextIsWhite = !board->nextIsWhite;
+
+    //Check if checkmate
+    CheckDataByColor cd = isBoardInCheck(board);
+    if(cd.white.inCheck || cd.black.inCheck){
+        if(isCheckmate(board)){
+            board->checkmate = true;
+        }
+    }
 }
 
 bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, int *newCastlingAvailability){
@@ -94,12 +103,11 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
     //Move may be valid, check if it will result in a check
     //Only check if not already checking if it's a king hit
     if(!isSame(move.to, board->whiteKing) && !isSame(move.to, board->blackKing)){
-    bool whiteCheck = false, blackCheck = false;
-    willNextMoveBeCheck(board, move, &whiteCheck, &blackCheck);
-        if(board->nextIsWhite && whiteCheck)
+        CheckDataByColor cd = willNextMoveBeCheck(board, move);
+        if(board->nextIsWhite && cd.white.inCheck)
             //White cannot move to put themselves in check
             return false;
-        if(!board->nextIsWhite && blackCheck)
+        if(!board->nextIsWhite && cd.black.inCheck)
             //Black cannot move to put themselves in check
             return false;
     }
@@ -156,6 +164,7 @@ bool checkPawnMove(Board *board, Move move, Square *enPassante){
         
         return isValid;
     } else {
+        //Takes piece
         return isOpponentAt(board, move.to) || isSame(move.to, board->enPassante);
     }
 
