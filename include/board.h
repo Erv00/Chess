@@ -51,4 +51,6 @@ bool isOpponentAt(Board *board, Square square);
 //Returnes true if the piece is the opponents
 bool isOpponent(Board *board, Piece piece);
 
+bool isSameColorAt(Board *board, Square s1, Square s2);
+
 #endif

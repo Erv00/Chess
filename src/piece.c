@@ -56,6 +56,10 @@ bool isValidPiece(Piece p){
     return p & (COLOR_BLACK | COLOR_WHITE);
 }
 
+bool isSameColor(Piece p1, Piece p2){
+    return (p1 & (COLOR_WHITE + COLOR_BLACK)) == (p2 & (COLOR_WHITE + COLOR_BLACK));
+}
+
 const char* getPieceFace(Piece p){
     char offset = isBlack(p) ? 6 : 0;
     Piece pCode = p & 7;

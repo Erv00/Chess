@@ -6,11 +6,15 @@
 
 typedef struct CheckData {
     bool inCheck;
-    Square checker;
+    unsigned short numCheckers;
+    Square checkers[2];
 } CheckData;
 
 typedef struct CheckDataByColor {
-    CheckData white, black;
+    //Contains data if white is in check
+    CheckData white;
+    //Contains data if black is in check
+    CheckData black;
 } CheckDataByColor;
 
 //Sets the two pointed bools if the respective color is in check
@@ -25,5 +29,10 @@ CheckDataByColor willNextMoveBeCheck(Board *b, Move move);
 CheckDataByColor isBoardInCheck(Board *board);
 
 bool isCheckmate(Board *board);
+
+bool canBeBlocked(Board *board, Square what, Square target);
+
+//Returnes true if the target square can be moved to by any opposing piece
+bool canAnyMoveTo(Board *board, Square target);
 
 #endif

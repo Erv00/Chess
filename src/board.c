@@ -222,3 +222,7 @@ bool isOpponentAt(Board *board, Square square){
     //There is a piece, is it opponent's
     return isOpponent(board, at(board, square));
 }
+
+bool isSameColorAt(Board *board, Square s1, Square s2){
+    return isSameColor(at(board,s1), at(board, s2));
+}

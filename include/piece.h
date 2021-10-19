@@ -43,6 +43,7 @@ bool isBishop(Piece p);
 bool isQueen(Piece p);
 bool isKing(Piece p);
 bool isValidPiece(Piece p);
+bool isSameColor(Piece p1, Piece p2);
 
 //Returnes the string to print for a piece
 const char* getPieceFace(Piece p);

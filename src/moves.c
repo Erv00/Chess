@@ -244,6 +244,16 @@ bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvai
 
     bool isValid = board->castlingAvailability & (1 << castlingID);
 
+    //Can only castle if square in between is not under threat
+    Square middle = stepToward(move.from, move.to);
+    board->nextIsWhite = !board->nextIsWhite;
+    if(canAnyMoveTo(board, middle)){
+        //Is under threat
+        board->nextIsWhite = !board->nextIsWhite;
+        return false;
+    }
+    board->nextIsWhite = !board->nextIsWhite;
+
     if(isValid && castling != NULL){
         castling->from.rank = move.to.rank;
         castling->to.rank = move.to.rank;
