@@ -39,6 +39,17 @@ void movePieceWithCheck(Board *board, Move move){
     //En passante resets with every move
     board->enPassante = enPassante;
 
+    //Update board state
+    //50 move rule
+    if(isPawnAt(board, move.from) || !isFreeAt(board, move.to))
+        board->halfmoveClock = 0;
+    else
+        board->halfmoveClock++;
+    
+    //Move counter
+    if(!board->nextIsWhite)
+        board->fullmoveCounter++;
+
     //Castling
     if(rookMove.from.rank != -1){
         movePiece(board, rookMove);
@@ -47,13 +58,7 @@ void movePieceWithCheck(Board *board, Move move){
     movePiece(board, move);
     board->nextIsWhite = !board->nextIsWhite;
 
-    //Check if checkmate
-    CheckDataByColor cd = isBoardInCheck(board);
-    if(cd.white.inCheck || cd.black.inCheck){
-        if(isCheckmate(board)){
-            board->checkmate = true;
-        }
-    }
+    checkBoardStatus(board);
 }
 
 bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, int *newCastlingAvailability){

@@ -155,13 +155,29 @@ void printBoard(Board *board){
     printf("White is %sin check\n", cd.white.inCheck ? "" : "not ");
     econio_gotoxy(11,2);
     printf("Black is %sin check\n", cd.black.inCheck ? "" : "not ");
+    econio_gotoxy(11,3);
+    printf("Half moves %d, Full moves %d\n", board->halfmoveClock, board->fullmoveCounter);
+    econio_gotoxy(11,4);
+    printf("%s to move\n", board->nextIsWhite ? "White" : "Black");
+    if(board->checkmate)
+            printf("CHECKMATE\n");
+
+    econio_gotoxy(0,11);
+}
+
+void checkBoardStatus(Board *board){
+    //Check for checkmate
+    CheckDataByColor cd = isBoardInCheck(board);
     if(cd.white.inCheck || cd.black.inCheck){
         if(isCheckmate(board)){
-            printf("CHECKMATE\n");
+            board->checkmate = true;
         }
     }
 
-    econio_gotoxy(0,11);
+    //50 move rule
+    if(board->halfmoveClock >= 100){
+        printf("DRAW\n");
+    }
 }
 
 Piece at(Board *board, Square square){

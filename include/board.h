@@ -31,6 +31,9 @@ Board* newGameFromStart();
 //Prints the board
 void printBoard(Board *board);
 
+//Check the board's status: Check[mate], fifty-move rule
+void checkBoardStatus(Board *board);
+
 Piece at(Board *board, Square square);
 
 //Returnes true if the specified cell is free
