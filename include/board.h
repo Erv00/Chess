@@ -26,7 +26,7 @@ typedef struct Board {
 Board* newGameFromFen(const char* fenStr);
 
 //Starts a new game
-Board* newGameFromStart();
+Board* newGameFromStart(void);
 
 //Prints the board
 void printBoard(Board *board);
