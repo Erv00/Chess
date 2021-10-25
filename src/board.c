@@ -117,6 +117,23 @@ Board* newGameFromFen(const char* fenStr){
     return b;
 }
 
+void getCastlingString(Board *board, char cast[4]){
+    static const char *CASTLING_ORDER = "KQkq";
+    if(board->castlingAvailability == 0){
+        cast[0] = '-';
+        cast[1] = '\0';
+        return;
+    }
+
+    //Castling is available
+    for(int i=0; i<4; i++){
+        bool white = i < 2;
+        bool kingside = (i % 2) == 0;
+        if(canCastle(board, white, kingside))
+            *cast++ = CASTLING_ORDER[i];
+    }
+}
+
 //Starts a new game
 Board* newGameFromStart(){
     return newGameFromFen(START_FEN);
@@ -159,6 +176,10 @@ void printBoard(Board *board){
     printf("Half moves %d, Full moves %d\n", board->halfmoveClock, board->fullmoveCounter);
     econio_gotoxy(11,4);
     printf("%s to move\n", board->nextIsWhite ? "White" : "Black");
+    econio_gotoxy(11, 5);
+    char cast[5] = {0};
+    getCastlingString(board, cast);
+    printf("Castling: %s\n", cast);
     if(board->checkmate)
             printf("CHECKMATE\n");
 

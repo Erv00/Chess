@@ -21,9 +21,10 @@ void movePiece(Board *board, Move move){
 void movePieceWithCheck(Board *board, Move move){
     Square enPassante = {-1, -1};
     Move rookMove = {.from.rank = -1};
-    int newCastlingAvailability;
-    if(!isValidMove(board, move, &enPassante, &rookMove, &newCastlingAvailability))
+    int newCastlingAvailability = -1;
+    if(!isValidMove(board, move, &enPassante, &rookMove, &newCastlingAvailability)){
         return;
+    }
     
     //Check if hitting en passante
     if(isPawnAt(board, move.from) && isSame(move.to, board->enPassante)){
@@ -50,10 +51,12 @@ void movePieceWithCheck(Board *board, Move move){
     if(!board->nextIsWhite)
         board->fullmoveCounter++;
 
+    if(newCastlingAvailability != -1)
+        board->castlingAvailability = newCastlingAvailability;
+
     //Castling
     if(rookMove.from.rank != -1){
         movePiece(board, rookMove);
-        board->castlingAvailability = newCastlingAvailability;
     }
     movePiece(board, move);
     board->nextIsWhite = !board->nextIsWhite;
@@ -85,7 +88,7 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
         valid = checkPawnMove(board, move, enPassante);
         break;
     case ROOK:
-        valid = checkRookMove(board, move);
+        valid = checkRookMove(board, move, newCastlingAvailability);
         break;
     case KNIGHT:
         valid = checkKnightMove(board, move);
@@ -175,7 +178,7 @@ bool checkPawnMove(Board *board, Move move, Square *enPassante){
 
 }
 
-bool checkRookMove(Board *board, Move move){
+bool checkRookMove(Board *board, Move move, int *newCastlingAvailability){
     //Check if directionally OK
     if(move.from.rank != move.to.rank && move.from.file != move.to.file){
         return false;
@@ -188,6 +191,20 @@ bool checkRookMove(Board *board, Move move){
             return false;
         }
         current = stepToward(current, move.to);
+    }
+
+    //Remove castling
+    if(move.from.rank == 0 || move.from.rank == 7){
+        if(move.from.file == 0 || move.from.file == 7){
+            int mask = 1;
+            if(!board->nextIsWhite)
+                mask = mask << 2;
+            //If queenside
+            if(move.from.file == 0)
+                mask = mask << 1;
+
+            *newCastlingAvailability = board->castlingAvailability & ~mask;
+        }
     }
 
     return true;
@@ -208,9 +225,9 @@ bool checkKnightMove(Board *board, Move move){
 
 bool checkBishopMove(Board *board, Move move){
     //Check if diagnal move
-    //This works beacuse of maths, see documentation
-    int diff = toSquareID(move.from) - toSquareID(move.to);
-    if(diff % 7 != 0 && diff % 9 != 0){
+    int rankDiff = move.from.rank-move.to.rank;
+    int fileDiff = move.from.file-move.to.file;
+    if(abs(rankDiff) != abs(fileDiff)){
         return false;
     }
 
@@ -227,13 +244,21 @@ bool checkBishopMove(Board *board, Move move){
 }
 
 bool checkQueenMove(Board *board, Move move){
-    return checkBishopMove(board, move) || checkRookMove(board, move);
+    return checkBishopMove(board, move) || checkRookMove(board, move, NULL);
 }
 
 bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvailability){
     int dist = nonEuclideanDistance(move.from, move.to);
-    if(dist == 1)
+    if(dist == 1){
+        //Normal move, remove castling availability
+        if(newCastlingAvailability != NULL){
+            if(board->nextIsWhite)
+                *newCastlingAvailability = board->castlingAvailability & (4+8);
+            else
+                *newCastlingAvailability = board->castlingAvailability & (1+2);
+        }
         return true;
+    }
     
     if(dist != 2)
         return false;
@@ -242,12 +267,16 @@ bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvai
     if(move.from.rank != move.to.rank)
         return false;
     
-    int kingside = move.from.file < move.to.file ? 0 : 1;
-    int white = board->nextIsWhite ? 0 : 2;
+    bool kingside = move.to.file == 6;
 
-    int castlingID = white+kingside;
+    int mask = 1;
+    if(!board->nextIsWhite)
+        mask = mask << 2;
+    //Is queenside
+    if(move.to.file == 2)
+        mask = mask << 1;
 
-    bool isValid = board->castlingAvailability & (1 << castlingID);
+    bool isValid = board->castlingAvailability & mask;
 
     //Can only castle if square in between is not under threat
     Square middle = stepToward(move.from, move.to);
@@ -263,12 +292,26 @@ bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvai
         castling->from.rank = move.to.rank;
         castling->to.rank = move.to.rank;
         //Select correct rook
-        castling->from.file = kingside ? 0 : 7;
+        castling->from.file = kingside ? 7 : 0;
         //Select file
-        castling->to.file = !kingside ? move.to.file-1 : move.to.file+1;
-        if(newCastlingAvailability != NULL)
-            *newCastlingAvailability = board->castlingAvailability ^ (1 << castlingID);
+        castling->to.file = kingside ? move.to.file-1 : move.to.file+1;
+        if(newCastlingAvailability != NULL){
+            if(board->nextIsWhite)
+                *newCastlingAvailability = board->castlingAvailability & (4+8);
+            else
+                *newCastlingAvailability = board->castlingAvailability & (1+2);
+        }
     }
 
     return isValid;
+}
+
+bool canCastle(Board *board, bool white, bool kingside){
+    int mask = 1;
+    if(!white)
+        mask = mask << 2;
+    if(!kingside)
+        mask = mask << 1;
+    
+    return (board->castlingAvailability & mask) != 0;
 }

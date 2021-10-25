@@ -25,6 +25,8 @@ typedef struct Board {
 //Loads a game state from a FEN string, and returnes the game
 Board* newGameFromFen(const char* fenStr);
 
+void getCastlingString(Board *board, char cast[4]);
+
 //Starts a new game
 Board* newGameFromStart(void);
 

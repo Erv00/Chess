@@ -34,7 +34,7 @@ Piece pieceAtMoveTo(Board *board, Move move);
 //If this creates an en passantable square, save it
 bool checkPawnMove(Board *board, Move move, Square *enPassante);
 //Returnes true if the move is valid for a rook
-bool checkRookMove(Board *board, Move move);
+bool checkRookMove(Board *board, Move move, int *newCastlingAwailability);
 //Returnes true if the move is valid for a knight
 bool checkKnightMove(Board *board, Move move);
 //Returnes true if the move is valid for a bishop
@@ -45,4 +45,5 @@ bool checkQueenMove(Board *board, Move move);
 //If it's a castling move, also return the move to move the rook
 bool checkKingMove(Board *board, Move move, Move *castlingMove, int *newCastlingAvailability);
 
+bool canCastle(Board *board, bool white, bool kingside);
 #endif
