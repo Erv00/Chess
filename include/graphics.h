@@ -17,6 +17,7 @@ typedef struct GraphicsData{
 GraphicsData initWindow(void);
 
 bool loadPieces(SDL_Renderer *renderer);
+void unloadPieces(void);
 
 SDL_Texture *getPieceGraphics(Piece p);
 

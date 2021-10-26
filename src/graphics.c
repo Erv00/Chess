@@ -17,7 +17,7 @@ GraphicsData initWindow(){
 
     assert((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == IMG_INIT_PNG);
 
-    gp.window = SDL_CreateWindow("Schakk", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 400, 600, SDL_WINDOW_SHOWN);
+    gp.window = SDL_CreateWindow("Schakk", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 45*8, 45*8, SDL_WINDOW_SHOWN);
     assert(gp.window != NULL);
 
     gp.renderer = SDL_CreateRenderer(gp.window, -1, SDL_RENDERER_SOFTWARE);
@@ -35,12 +35,22 @@ bool loadPieces(SDL_Renderer *renderer){
         for(int i = 0;i < 6; i++){
             path[13] = PIECE_ACRONYMS[i];
 
-            PIECE_GRAPHICS[idx++] = IMG_LoadTexture(renderer, path);
+            SDL_Texture *t = IMG_LoadTexture(renderer, path);
+            if(t == NULL){
+                printf("Failed to open %s\n", path);
+            }
+            PIECE_GRAPHICS[idx++] = t;
         }
         //Now load blacks
         path[14] = 'd';
     }
     return true;
+}
+
+void unloadPieces(void){
+    for(int i = 0;i < 12; i++){
+        SDL_DestroyTexture(PIECE_GRAPHICS[i]);
+    }
 }
 
 SDL_Texture *getPieceGraphics(Piece p){
@@ -114,7 +124,16 @@ void renderPieces(SDL_Renderer *renderer, Board *board){
         rect.x = 0;
         for(int file=fileStart; file < 8 && file >= 0; file += step){
             Square s = {.rank = rank, .file = file};
-            if(!isFreeAt(board, s))
+            if(board->mouseState.held && isSame(s, board->mouseState.from) && !isFreeAt(board, s)){
+                //Don't render that piece at position, render at mouse
+                SDL_Rect mousePos = {
+                    .x = board->mouseState.xPos-45/2,
+                    .y = board->mouseState.yPos-45/2,
+                    .w = 45,
+                    .h = 45
+                };
+                SDL_RenderCopy(renderer, getPieceGraphics(at(board, s)), NULL, &mousePos);
+            } else if(!isFreeAt(board, s))
                 SDL_RenderCopy(renderer, getPieceGraphics(at(board, s)), NULL, &rect);
             rect.x += 45;
         }

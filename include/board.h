@@ -5,6 +5,7 @@
 
 #include "square.h"
 #include "piece.h"
+#include "mouse.h"
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -20,6 +21,8 @@ typedef struct Board {
     Square whiteKing;
     Square blackKing;
     bool checkmate;
+
+    MouseState mouseState;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game
