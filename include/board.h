@@ -2,6 +2,7 @@
 #define CHESS_BOARD
 
 #include <stdbool.h>
+#include <SDL2/SDL.h>
 
 #include "square.h"
 #include "piece.h"
@@ -23,15 +24,17 @@ typedef struct Board {
     bool checkmate;
 
     MouseState mouseState;
+    //Renderer associated with the board, may be null if nut using graphics
+    SDL_Renderer *renderer;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game
-Board* newGameFromFen(const char* fenStr);
+Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer);
 
 void getCastlingString(Board *board, char cast[4]);
 
 //Starts a new game
-Board* newGameFromStart(void);
+Board* newGameFromStart(SDL_Renderer *renderer);
 
 //Prints the board
 void printBoard(Board *board);

@@ -2,6 +2,7 @@
 
 #include "piece.h"
 #include "check.h"
+#include "promotion.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,6 +25,17 @@ void movePieceWithCheck(Board *board, Move move){
     int newCastlingAvailability = -1;
     if(!isValidMove(board, move, &enPassante, &rookMove, &newCastlingAvailability)){
         return;
+    }
+
+    //Move is valid
+
+    if(isPawnAt(board, move.from) && (move.to.rank == 0 || move.to.rank == 7)){
+        //Promote pawn
+        Piece choice = getChoice(board);
+        if(!isValidPiece(choice))
+            return;
+        
+        board->cell[move.from.rank][move.from.file] = choice;
     }
     
     //Check if hitting en passante
@@ -194,16 +206,18 @@ bool checkRookMove(Board *board, Move move, int *newCastlingAvailability){
     }
 
     //Remove castling
-    if(move.from.rank == 0 || move.from.rank == 7){
-        if(move.from.file == 0 || move.from.file == 7){
-            int mask = 1;
-            if(!board->nextIsWhite)
-                mask = mask << 2;
-            //If queenside
-            if(move.from.file == 0)
-                mask = mask << 1;
+    if(newCastlingAvailability != NULL){
+        if(move.from.rank == 0 || move.from.rank == 7){
+            if(move.from.file == 0 || move.from.file == 7){
+                int mask = 1;
+                if(!board->nextIsWhite)
+                    mask = mask << 2;
+                //If queenside
+                if(move.from.file == 0)
+                    mask = mask << 1;
 
-            *newCastlingAvailability = board->castlingAvailability & ~mask;
+                *newCastlingAvailability = board->castlingAvailability & ~mask;
+            }
         }
     }
 

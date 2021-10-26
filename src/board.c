@@ -102,7 +102,7 @@ const char* processFENEnPassanteData(Board *b, const char *fenStr){
     return ++fenStr;
 }
 
-Board* newGameFromFen(const char* fenStr){
+Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer){
     Board *b = calloc(1,sizeof(Board));
     fenStr = processFENPieceData(b, fenStr);
     if(*fenStr++ == 'w')
@@ -114,6 +114,7 @@ Board* newGameFromFen(const char* fenStr){
     fenStr = processFENEnPassanteData(b, fenStr);
     //Half and full-moves
     sscanf(fenStr, "%d %d", &b->halfmoveClock, &b->fullmoveCounter);
+    b->renderer = renderer;
     return b;
 }
 
@@ -135,8 +136,8 @@ void getCastlingString(Board *board, char cast[4]){
 }
 
 //Starts a new game
-Board* newGameFromStart(){
-    return newGameFromFen(START_FEN);
+Board* newGameFromStart(SDL_Renderer *renderer){
+    return newGameFromFen(START_FEN, renderer);
 }
 
 //Prints the board

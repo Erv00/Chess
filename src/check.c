@@ -92,7 +92,7 @@ bool isCheckmate(Board *board){
     
     if(nonEuclideanDistance(activeCheck.checkers[0], checkedKing) < 2)
         //Cannot block if directly next to king
-        return false;
+        return true;
     return !canBeBlocked(board, activeCheck.checkers[0], checkedKing);
 }
 
