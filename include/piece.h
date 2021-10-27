@@ -48,4 +48,7 @@ bool isSameColor(Piece p1, Piece p2);
 //Returnes the string to print for a piece
 const char* getPieceFace(Piece p);
 
+//Returnes the character representing p
+char getPieceChar(Piece p);
+
 #endif

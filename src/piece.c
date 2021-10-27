@@ -71,3 +71,16 @@ const char* getPieceFace(Piece p){
     fprintf(stderr, "No such piece: %d\n", p);
     return "X";
 }
+
+char getPieceChar(Piece p){
+    static const char PIECE_CHAR[] = {'P', 'R', 'N', 'B', 'Q', 'K'};
+
+    char color = isWhite(p) ? 0 : 32;
+    Piece pCode = p & 7;
+    for(unsigned int i = 0; i < 7; i++){
+        if(pCode == i)
+            return PIECE_CHAR[i] | color;
+    }
+    fprintf(stderr, "No such piece: %d\n", p);
+    return 'X';
+}

@@ -31,13 +31,18 @@ typedef struct Board {
 //Loads a game state from a FEN string, and returnes the game
 Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer);
 
-void getCastlingString(Board *board, char cast[4]);
+//Saves the castling string in cast, does NOT append \0
+//Returnes the length of the string
+int getCastlingString(Board *board, char cast[4]);
 
 //Starts a new game
 Board* newGameFromStart(SDL_Renderer *renderer);
 
 //Prints the board
 void printBoard(Board *board);
+
+//Returnes the game's FEN string
+char *saveAsFEN(Board *board);
 
 //Check the board's status: Check[mate], fifty-move rule
 void checkBoardStatus(Board *board);

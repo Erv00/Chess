@@ -5,6 +5,7 @@
 
 Square algebraicToSquare(const char algebraic[2]);
 
+//Saves a square's algebraic notation in out
 void squareToAlgebraic(Square square, char out[2]);
 
 #endif

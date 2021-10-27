@@ -118,14 +118,14 @@ Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer){
     return b;
 }
 
-void getCastlingString(Board *board, char cast[4]){
+int getCastlingString(Board *board, char cast[4]){
     static const char *CASTLING_ORDER = "KQkq";
     if(board->castlingAvailability == 0){
         cast[0] = '-';
-        cast[1] = '\0';
-        return;
+        return 1;
     }
 
+    char *orig = cast;
     //Castling is available
     for(int i=0; i<4; i++){
         bool white = i < 2;
@@ -133,6 +133,7 @@ void getCastlingString(Board *board, char cast[4]){
         if(canCastle(board, white, kingside))
             *cast++ = CASTLING_ORDER[i];
     }
+    return cast-orig;
 }
 
 //Starts a new game
@@ -185,6 +186,74 @@ void printBoard(Board *board){
             printf("CHECKMATE\n");
 
     econio_gotoxy(0,11);
+}
+
+char* saveFENPieceData(Board *board, char* fen){
+    for(int rank = 7; rank >= 0; rank--){
+        int lastAt = -1;
+        int file;
+        for(file = 0; file < 8; file++){
+            Square s = {.rank = rank, .file = file};
+            if(isValidPieceAt(board, s)){
+                //Padding
+                if(lastAt != file-1){
+                    *fen++ = '0' + file - lastAt - 1;
+                }
+                lastAt = file;
+                *fen++ = getPieceChar(at(board, s));
+            }
+        }
+        //Padding
+        if(lastAt != 7){
+            *fen++ = '0' + 7 - lastAt;
+        }
+        if(rank != 0)
+            *fen++ = '/';
+    }
+    
+    *fen++ = ' ';
+    return fen;
+}
+
+char* saveAsFEN(Board *board){
+    int len = 79+log10(board->fullmoveCounter)+1+1;
+    char *fen = malloc(len); //Longest fen+extra + fullmove counter + enough space for the fullmove counter + nullbyte
+    char *current = fen;
+    if(fen == NULL){
+        fprintf(stderr, "Failed to allocate memory for fen str\n");
+        exit(-1);
+    }
+
+    memset(fen, 0, len);
+
+    //Piece data
+    current = saveFENPieceData(board, current);
+
+    //Active color
+    if(board->nextIsWhite)
+        *current++ = 'w';
+    else
+        *current++ = 'b';
+
+    *current++ = ' ';
+
+    //Castling
+    current += getCastlingString(board, current);
+    *current++ = ' ';
+
+    //En passante
+    if(isValidSquare(board->enPassante)){
+        squareToAlgebraic(board->enPassante, current);
+        current += 2;
+    }else{
+        *current++ = '-';
+    }
+
+    *current++ = ' ';
+
+    //Halfmove & fullmove
+    sprintf(current, "%d %d", board->halfmoveClock, board->fullmoveCounter);
+    return fen;
 }
 
 void checkBoardStatus(Board *board){
