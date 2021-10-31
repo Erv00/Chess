@@ -4,6 +4,8 @@
 #include "moves.h"
 #include "piece.h"
 
+#include <SDL2/SDL.h>
+
 typedef struct ReplayNode ReplayNode;
 
 enum MoveUniqueness {
@@ -31,6 +33,8 @@ struct ReplayNode{
     Piece pieceCaptured;
     Piece promotionChoice;
 
+    SDL_Texture *texture;
+
     //Linked list
     struct ReplayNode *previous;
     struct ReplayNode *next;
@@ -39,6 +43,7 @@ struct ReplayNode{
 typedef struct ReplayList{
     ReplayNode *first;
     ReplayNode *last;
+    int length;
 } ReplayList;
 
 
@@ -49,4 +54,8 @@ void deleteList(ReplayList *list);
 enum MoveUniqueness isMoveUnique(Board *board, Move move);
 
 int nodeToString(ReplayNode *node, char *out);
+
+void createNodeTexture(ReplayNode *node, SDL_Renderer *renderer);
+
+void renderReplay(ReplayList list, SDL_Renderer *renderer);
 #endif

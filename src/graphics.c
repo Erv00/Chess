@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 static SDL_Texture *PIECE_GRAPHICS[12] = {NULL};
 
@@ -17,11 +18,13 @@ GraphicsData initWindow(){
 
     assert((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == IMG_INIT_PNG);
 
-    gp.window = SDL_CreateWindow("Schakk", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 45*8, 45*8, SDL_WINDOW_SHOWN);
+    gp.window = SDL_CreateWindow("Schakk", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 45*12, 45*8, SDL_WINDOW_SHOWN);
     assert(gp.window != NULL);
 
     gp.renderer = SDL_CreateRenderer(gp.window, -1, SDL_RENDERER_SOFTWARE);
     assert(gp.renderer != NULL);
+
+    TTF_Init();
     return gp;
 }
 
@@ -139,4 +142,30 @@ void renderPieces(SDL_Renderer *renderer, Board *board){
         }
         rect.y += 45;
     }
+}
+
+SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height){
+    static TTF_Font *font = NULL;
+
+    //Open font if not opened
+    if(font == NULL){
+        font = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 16);
+        if(font == NULL){
+            fprintf(stderr, "Failed to open font: %s\n", SDL_GetError());
+            exit(-1);
+        }
+    }
+
+    SDL_Color col = {255,255,255,255};
+    SDL_Surface *surf = TTF_RenderUTF8_Blended(font, str, col);
+
+    if(width != NULL)
+        *width = surf->w;
+    if(height != NULL)
+        *height = surf->h;
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
+
+    SDL_FreeSurface(surf);
+    return tex;
 }

@@ -4,6 +4,7 @@
 
 #include "board.h"
 #include "algebraic.h"
+#include "graphics.h"
 
 void appendToList(ReplayList *list, ReplayNode data){
     ReplayNode *node = malloc(sizeof(ReplayNode));
@@ -23,6 +24,8 @@ void appendToList(ReplayList *list, ReplayNode data){
         list->last->next = node;
         list->last = node;
     }
+
+    list->length += 1;
 }
 
 enum MoveUniqueness isMoveUnique(Board *board, Move move){
@@ -86,8 +89,6 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
             if(isKnightAt(board, knightMove.from) && isValidMove(board, knightMove, NULL, NULL, NULL)){
                 if(knightMove.from.file == move.from.file)
                     ret &= ~FILE_UNIQUE;
-                //else if(knightMove.from.rank == move.from.rank && (ret & FILE_UNIQUE) != FILE_UNIQUE)
-                //    ret &= ~RANK_UNIQUE;
                 else if(knightMove.from.rank == move.from.rank)
                     ret &= ~RANK_UNIQUE;
                 else if(ret == UNIQUE)
@@ -155,4 +156,69 @@ int nodeToString(ReplayNode *node, char *out){
 
     *out = '\0';
     return out - orig + 1;
+}
+
+void createNodeTexture(ReplayNode *node, SDL_Renderer *renderer){
+    //Don't recreate if node already has it created
+    if(node->texture != NULL)
+        return;
+
+    char notation[8] = {0};
+    nodeToString(node, notation);
+    node->texture = stringToTexture(renderer, notation, NULL, NULL);
+    if(node->texture == NULL)
+        exit(-1);
+}
+
+void renderReplay(ReplayList list, SDL_Renderer *renderer){
+    SDL_Rect dst = {
+        .x = 8*45,
+        .y = 0,
+    };
+
+    //TODO: Only print last 17 or so full moves
+    int stepNumber = 1;
+    bool first = true;
+    ReplayNode *node = list.first;
+    if(list.length > 17*2){
+        //More than we can display
+        for(int length = list.length; length > 17*2; length -= 2){ 
+            node = node->next->next;
+            ++stepNumber;
+        }
+    }
+
+    while(node != NULL){
+        //If first, print step number
+        if(first){
+            char str[7] = {0}; //4 characters are enough, the longest possible chess game is ~9000 moves
+            sprintf(str, "%d. ", stepNumber);
+            SDL_Texture *tex = stringToTexture(renderer, str, &dst.w, &dst.h);
+            SDL_RenderCopy(renderer, tex, NULL, &dst);
+            dst.x += dst.w;
+            SDL_DestroyTexture(tex);
+        }
+        
+        if(node->texture == NULL)
+            createNodeTexture(node, renderer);
+
+        SDL_QueryTexture(node->texture, NULL, NULL, &dst.w, &dst.h);
+
+        SDL_RenderCopy(renderer, node->texture, NULL, &dst);
+
+        if(first){
+            //Printed first, go to next column
+            //dst.x += dst.w + 20;
+            dst.x = 10*45;
+        }else{
+            //Printed second, go to next row
+            dst.y += dst.h;
+            dst.x = 8*45;
+            stepNumber++;
+        }
+
+        first = !first;
+
+        node = node->next;
+    }
 }

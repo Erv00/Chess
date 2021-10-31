@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-I./include -ggdb -Wall -Wextra -pedantic
-LDFLAGS=-lSDL2 -lSDL2_image -lm
+LDFLAGS=-lSDL2 -lSDL2_image -lm -lSDL2_ttf
 sources=$(wildcard src/*.c)
 objects=$(sources:src/%.c=obj/%.o)
 
