@@ -11,10 +11,6 @@ CheckData isOpponentInCheck(Board *board){
     for(int rank = 0; rank < 8; rank++){
         for(int file = 0; file < 8; file++){
             Square s = {.rank = rank, .file = file};
-            if(isSame(s, board->whiteKing) || isSame(s, board->blackKing)){
-                //No need to check kings
-                continue;
-            }
             if(isValidPieceAt(board, s)){
                 if(!isOpponentAt(board, s)){
                     Move m = {
@@ -59,7 +55,8 @@ bool isCheckmate(Board *board){
     
     Square checkedKing;
     CheckData activeCheck;
-    if(board->nextIsWhite){
+    //The two colors cannot be in check at the same time
+    if(checkD.white.inCheck){
         checkedKing = board->whiteKing;
         activeCheck = checkD.white;
     } else {

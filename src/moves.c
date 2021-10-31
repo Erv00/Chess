@@ -3,6 +3,7 @@
 #include "piece.h"
 #include "check.h"
 #include "promotion.h"
+#include "analysis.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,6 +29,7 @@ void movePieceWithCheck(Board *board, Move move){
     }
 
     //Move is valid
+    ReplayNode rNode = {.isWhiteMove = board->nextIsWhite, .move = move, .movedPiece = at(board, move.from), .moveUniqueness = isMoveUnique(board, move)};
 
     if(isPawnAt(board, move.from) && (move.to.rank == 0 || move.to.rank == 7)){
         //Promote pawn
@@ -36,8 +38,16 @@ void movePieceWithCheck(Board *board, Move move){
             return;
         
         board->cell[move.from.rank][move.from.file] = choice;
+        rNode.isPromotion = true;
+        rNode.promotionChoice = choice;
     }
-    
+
+    //Set node
+    if(!isFreeAt(board, move.to)){
+        rNode.isCapture = true;
+        rNode.pieceCaptured = at(board, move.to);
+    }
+
     //Check if hitting en passante
     if(isPawnAt(board, move.from) && isSame(move.to, board->enPassante)){
         //Take en passantable pawn
@@ -69,10 +79,16 @@ void movePieceWithCheck(Board *board, Move move){
     //Castling
     if(rookMove.from.rank != -1){
         movePiece(board, rookMove);
+        rNode.isCastling = true;
+        if(rookMove.from.file == 7)
+            rNode.castlingIsKingSide = true;
     }
     movePiece(board, move);
-    board->nextIsWhite = !board->nextIsWhite;
 
+    //Push to list, last element will be modified by checkBoardStatus to reflect check and checkmate data
+    appendToList(&board->replayData, rNode);
+
+    board->nextIsWhite = !board->nextIsWhite;
     checkBoardStatus(board);
 }
 
@@ -139,6 +155,10 @@ bool checkPawnMove(Board *board, Move move, Square *enPassante){
     int to = toSquareID(move.to);
 
     int diff = to-from;
+
+    //Check for board edge
+    if(abs(move.from.file - move.to.file) > 1)
+        return false;
 
     //Check for backward moves
     if(board->nextIsWhite){
@@ -225,14 +245,12 @@ bool checkRookMove(Board *board, Move move, int *newCastlingAvailability){
 }
 
 bool checkKnightMove(Board *board, Move move){
-    static const int KNIGHT_OFFSETS[] = {6, 10, 15, 17};
-    int diff = abs(toSquareID(move.to) - toSquareID(move.from));
-
-    for(int i = 0; i < 4; i++){
-        if(diff == KNIGHT_OFFSETS[i]){
-            return true;
-        }
-    }
+    int rankDiff = abs(move.from.rank - move.to.rank);
+    int fileDiff = abs(move.from.file - move.to.file);
+    if(rankDiff == 1 && fileDiff == 2)
+        return true;
+    if(rankDiff == 2 && fileDiff == 1)
+        return true;
 
     return false;
 }

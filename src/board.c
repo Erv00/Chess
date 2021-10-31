@@ -257,11 +257,14 @@ char* saveAsFEN(Board *board){
 }
 
 void checkBoardStatus(Board *board){
+    ReplayNode *node = board->replayData.last;
     //Check for checkmate
     CheckDataByColor cd = isBoardInCheck(board);
     if(cd.white.inCheck || cd.black.inCheck){
+        node->isCheck = true;
         if(isCheckmate(board)){
             board->checkmate = true;
+            node->isCheckmate = true;
         }
     }
 

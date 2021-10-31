@@ -1,10 +1,13 @@
 #ifndef CHESS_MOVES
 #define CHESS_MOVES
 
+#include <stdio.h>
 #include <stdbool.h>
 
-#include "board.h"
 #include "piece.h"
+#include "square.h"
+
+typedef struct Board Board;
 
 typedef struct Move{
     Square from;

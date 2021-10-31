@@ -7,10 +7,9 @@
 #include "square.h"
 #include "piece.h"
 #include "mouse.h"
+#include "analysis.h"
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-typedef struct Move Move;
 
 typedef struct Board {
     char cell[8][8];
@@ -26,6 +25,8 @@ typedef struct Board {
     MouseState mouseState;
     //Renderer associated with the board, may be null if nut using graphics
     SDL_Renderer *renderer;
+
+    ReplayList replayData;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game
