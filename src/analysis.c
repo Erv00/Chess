@@ -90,6 +90,9 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
                 //    ret &= ~RANK_UNIQUE;
                 else if(knightMove.from.rank == move.from.rank)
                     ret &= ~RANK_UNIQUE;
+                else if(ret == UNIQUE)
+                    //
+                    ret &= ~RANK_UNIQUE;
             }
         }
     }
