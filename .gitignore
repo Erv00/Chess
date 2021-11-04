@@ -2,3 +2,5 @@ obj
 chess
 chess.zip
 .vscode
+*.sch
+tmp
