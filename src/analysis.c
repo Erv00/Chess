@@ -176,7 +176,7 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
         .y = 0,
     };
 
-    //TODO: Only print last 17 or so full moves
+    //Only print last 17 or so full moves
     int stepNumber = 1;
     bool first = true;
     ReplayNode *node = list.first;
@@ -221,4 +221,33 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
 
         node = node->next;
     }
+}
+
+void saveWithMoves(const char *path, Board *board){
+    FILE *saveFile = fopen(path, "w");
+    if(saveFile == NULL)
+        //HANDLE: TODO
+        return;
+
+    //Save position
+    char *fen = saveAsFEN(board);
+    fprintf(saveFile, "%s\n", fen);
+    free(fen);
+
+    //If no moves have been made, skip
+    if(board->replayData.length != 0){
+        //Save moves
+        char nodeStr[8] = {0};
+
+        ReplayNode *node = board->replayData.first;
+        while(node != NULL){
+            nodeToString(node, nodeStr);
+            fprintf(saveFile, "%s\n", nodeStr);
+            
+            node = node->next;
+        }
+    }
+
+    //Close file
+    fclose(saveFile);
 }

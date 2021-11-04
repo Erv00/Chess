@@ -274,6 +274,20 @@ void checkBoardStatus(Board *board){
     }
 }
 
+void saveWithoutMoves(const char *path, Board *board){
+    FILE *saveFile = fopen(path, "w");
+    if(saveFile == NULL)
+        //HANDLE: TODO
+        return;
+
+    //Save position
+    char *fen = saveAsFEN(board);
+    fprintf(saveFile, "%s\n", fen);
+    free(fen);
+    //Close file
+    fclose(saveFile);
+}
+
 Piece at(Board *board, Square square){
     return board->cell[square.rank][square.file];
 }

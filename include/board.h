@@ -48,6 +48,10 @@ char *saveAsFEN(Board *board);
 //Check the board's status: Check[mate], fifty-move rule
 void checkBoardStatus(Board *board);
 
+void saveWithoutMoves(const char *path, Board *board);
+
+
+
 Piece at(Board *board, Square square);
 
 //Returnes true if the specified cell is free

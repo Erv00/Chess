@@ -169,3 +169,39 @@ SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width
     SDL_FreeSurface(surf);
     return tex;
 }
+
+static SDL_Texture *menuTextures[NUM_MENUS] = {NULL};
+
+bool loadMenuTextures(SDL_Renderer *renderer){
+    char path[20] = {0};
+    for(int i = 0; i < NUM_MENUS; i++){
+        sprintf(path, "assets/menu_%d.jpg", i);
+        SDL_Texture *t = IMG_LoadTexture(renderer, path);
+        if(t == NULL){
+            printf("Failed to open %s\n", path);
+            //exit(-1);
+        }
+        menuTextures[i] = t;
+    }
+    return true;
+}
+
+void unloadTextures(void){
+    for(int i = 0; i < NUM_MENUS; i++)
+        SDL_DestroyTexture(menuTextures[i]);
+}
+
+SDL_Texture* getMenuTexture(Menu menu){
+    SDL_Texture *t =  menuTextures[menu];
+    if(t == NULL)
+        printf("No texture for %d\n", menu);
+
+    return t;
+}
+
+
+SDL_Rect textureDim(SDL_Texture* tex){
+    SDL_Rect r;
+    SDL_QueryTexture(tex, NULL, NULL, &r.w, &r.h);
+    return r;
+}

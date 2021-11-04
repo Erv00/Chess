@@ -58,4 +58,7 @@ int nodeToString(ReplayNode *node, char *out);
 void createNodeTexture(ReplayNode *node, SDL_Renderer *renderer);
 
 void renderReplay(ReplayList list, SDL_Renderer *renderer);
+
+
+void saveWithMoves(const char *path, Board *board);
 #endif
