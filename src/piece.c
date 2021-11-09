@@ -1,6 +1,7 @@
 #include "piece.h"
 
 #include <stdio.h>
+#include <ctype.h>
 
 static const char* PIECE_FACES[] = {
     //WHITE
@@ -72,9 +73,10 @@ const char* getPieceFace(Piece p){
     return "X";
 }
 
-char getPieceChar(Piece p){
-    static const char PIECE_CHAR[] = {'P', 'R', 'N', 'B', 'Q', 'K'};
 
+static const char PIECE_CHAR[] = {'P', 'R', 'N', 'B', 'Q', 'K'};
+
+char getPieceChar(Piece p){
     char color = isWhite(p) ? 0 : 32;
     Piece pCode = p & 7;
     for(unsigned int i = 0; i < 7; i++){
@@ -83,4 +85,18 @@ char getPieceChar(Piece p){
     }
     fprintf(stderr, "No such piece: %d\n", p);
     return 'X';
+}
+
+Piece getPieceFromChar(const char ch){
+    for(Piece p = PAWN; p <= KING; p++){
+        if((PIECE_CHAR[p] | 32) == (ch | 32)){
+            if(isupper(ch))
+                return p | COLOR_WHITE;
+            else
+                return p | COLOR_BLACK;
+        }
+    }
+    fprintf(stderr, "No such piece %c\n", ch);
+    //Return invalid piece
+    return 0;
 }

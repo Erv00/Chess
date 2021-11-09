@@ -28,9 +28,25 @@ void appendToList(ReplayList *list, ReplayNode data){
     list->length += 1;
 }
 
+void appendPointerToList(ReplayList *list, ReplayNode *node){
+    if(list->first == NULL){
+        //List is empty
+        list->first = node;
+        list->last = node;
+    } else {
+        //Node is not empty, append after last
+        list->last->next = node;
+        list->last = node;
+    }
+
+    list->length += 1;
+}
+    
 enum MoveUniqueness isMoveUnique(Board *board, Move move){
     //If rook either file or rank may be needed, not both
     //If else both may be required
+    if(isPawnAt(board, move.from))
+        return UNIQUE;
 
     enum MoveUniqueness ret = UNIQUE;
 
@@ -107,7 +123,7 @@ int nodeToString(ReplayNode *node, char *out){
         //Castling
         memcpy(out, "0-0", 3);
         out += 3;
-        if(node->castlingIsKingSide){
+        if(!node->castlingIsKingSide){
             memcpy(out, "-0", 2);
             out += 2;
         }
@@ -250,4 +266,192 @@ void saveWithMoves(const char *path, Board *board){
 
     //Close file
     fclose(saveFile);
+}
+
+ReplayNode* parseMoveStr(const char *moveStr, Board *board){
+    ReplayNode *node = malloc(sizeof(ReplayNode));
+    if(node == NULL){
+        fprintf(stderr, "Failed to alloc memory for node\n");
+        exit(-1);
+    }
+
+    //Zero out for bools
+    memset(node, 0, sizeof(ReplayNode));
+    int length = strlen(moveStr);
+    bool knownOriginRank = false;
+    bool knownOriginFile = false;
+   
+    //Set defaults
+    node->isWhiteMove = board->nextIsWhite;
+    node->isCheckmate = moveStr[length-1] == '#';
+    node->isCheck = node->isCheckmate || moveStr[length-1] == '+';
+    node->moveUniqueness = UNIQUE;
+
+    if(moveStr[0] == '0'){
+        //Castling
+        node->isCastling = true;
+        if(board->nextIsWhite){
+            node->move.from = board->whiteKing;
+            node->move.to = board->whiteKing;
+            node->movedPiece = COLOR_WHITE | KING;
+        }else{
+            node->move.from = board->blackKing;
+            node->move.to = board->blackKing;
+            node->movedPiece = COLOR_BLACK | KING;
+        }
+        if(strcmp(moveStr, "0-0") == 0){
+            //Castling kingside
+            node->castlingIsKingSide = true;
+            node->move.to.file += 2;
+        }else{
+            //Castling queenside
+            node->move.to.file -= 2;                
+        }
+    } else {
+       //Not castling
+        for(int idx = 0; idx < length; idx++){
+            char curr = moveStr[idx] | 32; //Make all characters lowercase
+            bool couldBeBishop = false;
+            if(curr == 'b'){
+                if(length > 2){
+                    if(idx == 0){
+                        //Piece
+                        couldBeBishop = true;
+                    }else{
+                        if(idx >= length -2)
+                                couldBeBishop = true;
+                    }
+                }
+            }
+            if(curr == 'x'){
+                //Capture
+                node->isCapture = true;
+            }else if(curr == '#' || curr == '+'){
+                //Check(mate)
+            }else if('a' <= curr && curr <= 'h' && !couldBeBishop){ //Extra conditions for bishop
+                //Move data or disambiguation
+                //File
+                if(node->move.to.file != 0){
+                    //Already had a file, that was a disambiguation
+                    node->move.from.file = node->move.to.file;
+                    knownOriginFile = true;
+                    if(node->movedPiece != 0)
+                        node->moveUniqueness ^= FILE_UNIQUE;
+                }
+                node->move.to.file = curr - 'a';
+            }else if('1' <= curr && curr <= '8'){
+                //Move data or disambiguation
+                //Rank
+                if(node->move.to.rank != 0){
+                    //Already had a rank, that was a disambiguation
+                    node->move.from.rank = node->move.to.rank;
+                    node->moveUniqueness ^= RANK_UNIQUE;
+                }
+                node->move.to.rank = curr - '1';
+            }else{
+                //Piece specification
+                if(node->movedPiece == 0 && idx < length-2)
+                    node->movedPiece = getPieceFromChar(moveStr[idx]);
+                else
+                    //Had piece specified, this is a promotion
+                    node->promotionChoice = getPieceFromChar(moveStr[idx]);
+            }
+        }
+    }
+
+    if(node->movedPiece == 0){
+        node->movedPiece = PAWN;
+        if(board->nextIsWhite)
+            node->movedPiece |= COLOR_WHITE;
+        else
+            node->movedPiece |= COLOR_BLACK;
+    }
+
+    //Determine move origin
+    if(knownOriginRank && knownOriginFile)
+        //Origin is precisely known, return
+        return node;
+
+    if(knownOriginRank){
+        //Rank known, file unknow
+        for(int file = 0; file < 8; file++){
+            node->move.from.file = file;
+            if(at(board, node->move.from) == node->movedPiece)
+                //Found piece, check if can move
+                if(isValidMove(board, node->move, NULL, NULL, NULL))
+                    //Found piece
+                    break;
+        }
+    }else if(knownOriginFile){
+        //Rank unknown, file know
+        for(int rank = 0; rank < 8; rank++){
+            node->move.from.rank = rank;
+            if(at(board, node->move.from) == node->movedPiece)
+                //Found piece, check if can move
+                if(isValidMove(board, node->move, NULL, NULL, NULL))
+                    //Found piece
+                    break;
+        }
+    }else{
+        //Neither is known
+        switch(node->movedPiece & 7){
+            case PAWN:
+                node->move.from = findPawnMovableTo(node->move.to, node->movedPiece, board);
+                break;
+            case ROOK:
+                node->move.from = findRookMovableTo(node->move.to, node->movedPiece, board);
+                break;
+            case KNIGHT:
+                node->move.from = findKnightMovableTo(node->move.to, node->movedPiece, board);
+                break;
+            case BISHOP:
+                node->move.from = findBishopMovableTo(node->move.to, node->movedPiece, board);
+                break;
+            case QUEEN:
+                node->move.from = findQueenMovableTo(node->move.to, node->movedPiece, board);
+                break;
+            case KING:
+                if(board->nextIsWhite)
+                    node->move.from = board->whiteKing;
+                else
+                    node->move.from = board->blackKing;
+                break;
+        }
+    }
+
+    return node;
+}
+
+
+Board* loadMoves(const char *path){
+    //Open file
+    FILE *saveFile = fopen(path, "r");
+    if(saveFile == NULL){
+        //Handle TODO
+        return NULL;
+    }
+
+    //Read fen
+    char fen[90]; //Bit extra for the longest possible fen string
+    fgets(fen, 90, saveFile);
+    Board *board = newGameFromStart(NULL);
+
+    //While not empty parse string
+
+    char moveStr[8];
+    while(fgets(moveStr, 8, saveFile) != NULL){
+        //Discard \n
+        moveStr[strlen(moveStr)-1] = '\0';
+        ReplayNode *node = parseMoveStr(moveStr, board);
+        appendPointerToList(&board->replayData, node);
+
+        //Make move
+        movePiece(board, node->move);
+
+        //Update board status
+        board->checkmate = node->isCheckmate;
+        board->nextIsWhite = !board->nextIsWhite;
+    }
+
+    return board;
 }

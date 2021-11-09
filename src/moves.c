@@ -347,3 +347,140 @@ bool canCastle(Board *board, bool white, bool kingside){
     
     return (board->castlingAvailability & mask) != 0;
 }
+
+Square findPawnMovableTo(Square to, Piece moved, Board *board){
+    Move move = {
+        .from = to,
+        .to = to
+    };
+    int dir = -1;
+    if(isBlack(moved))
+        dir = 1;
+
+    //Normal move
+    move.from.rank += dir;
+    if(isValidSquare(move.from) && at(board, move.from) == moved)
+        if(isValidMove(board, move, NULL, NULL, NULL))
+            return move.from;
+    //Capture
+    move.from.file += dir;
+    if(isValidSquare(move.from) && at(board, move.from) == moved)
+        if(isValidMove(board, move, NULL, NULL, NULL))
+            return move.from;
+
+    move.from.file -= 2*dir;
+    if(isValidSquare(move.from) && at(board, move.from) == moved)
+        if(isValidMove(board, move, NULL, NULL, NULL))
+            return move.from;
+
+    //2 square move
+    move.from.rank += dir;
+    move.from.file += dir;
+    if(isValidSquare(move.from) && at(board, move.from) == moved)
+        if(isValidMove(board, move, NULL, NULL, NULL))
+            return move.from;
+
+    //Should not happen
+    fprintf(stderr, "File corrupted\n");
+    exit(-1);
+}
+
+Square findRookMovableTo(Square to, Piece moved, Board *board){
+    Move move = {to, to};
+
+    //Check in rank
+    for(int file = 0; file < 8; file++){
+        move.from.file = file;
+        if(at(board, move.from) == moved)
+            if(isValidMove(board, move, NULL, NULL, NULL))
+                return move.from;
+    }
+
+    move.from.file = to.file;
+
+    //Check in file
+    for(int rank = 0; rank < 8; rank++){
+        move.from.rank = rank;
+        if(at(board, move.from) == moved)
+            if(isValidMove(board, move, NULL, NULL, NULL))
+                return move.from;
+    }
+
+    //Should only happen if checking queen
+    Square ret = {-1, -1};
+    return ret;
+}
+
+Square findKnightMovableTo(Square to, Piece moved, Board *board){
+    int rankDiff = 2;
+    int fileDiff = 1;
+
+    Move move = {to, to};
+
+    for(int i=0; i<4; i++){ //There are 4 cases
+        move.from.rank += rankDiff;
+        move.from.file += fileDiff;
+        if(at(board, move.from) == moved)
+            if(isValidMove(board, move, NULL, NULL, NULL))
+                return move.from;
+        
+        move.from = to;
+        if(fileDiff == -1)
+            rankDiff *= -1;
+        fileDiff *= -1;
+    }
+
+    rankDiff = 1;
+    fileDiff = 2;
+
+    for(int i=0; i<4; i++){ //There are 4 cases
+        move.from.rank += rankDiff;
+        move.from.file += fileDiff;
+        if(at(board, move.from) == moved)
+            if(isValidMove(board, move, NULL, NULL, NULL))
+                return move.from;
+        
+        move.from = to;
+        if(fileDiff == -1)
+            rankDiff *= -1;
+        fileDiff *= -1;
+    }
+
+    //Should not happen
+    fprintf(stderr, "File corrupted\n");
+    exit(-1);
+}
+
+Square findBishopMovableTo(Square to, Piece moved, Board *board){
+    int rankDiff = 1;
+    int fileDiff = 1;
+
+    Move move = {to, to};
+    //There are 4 cases
+    for(int i=0; i<4;i++){
+        do{
+            move.from.rank += rankDiff;
+            move.from.file += fileDiff;
+            if(isValidSquare(move.from))
+                if(at(board, move.from) == moved)
+                    if(isValidMove(board, move, NULL, NULL, NULL))
+                        return move.from;
+        }while(isValidSquare(move.from));
+        move.from = to;
+        if(rankDiff == -1)
+            fileDiff = -1;
+        rankDiff *= -1;
+    }
+
+    //Should only happen if checking queen
+    Square ret = {-1, -1};
+    return ret;
+}
+
+Square findQueenMovableTo(Square to, Piece moved, Board *board){
+    Square ret = findRookMovableTo(to, moved, board);
+    if(isValidSquare(ret))
+        return ret;
+    
+    return findBishopMovableTo(to, moved, board);
+}

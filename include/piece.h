@@ -50,5 +50,6 @@ const char* getPieceFace(Piece p);
 
 //Returnes the character representing p
 char getPieceChar(Piece p);
+Piece getPieceFromChar(const char ch);
 
 #endif

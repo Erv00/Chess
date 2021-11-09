@@ -48,6 +48,7 @@ typedef struct ReplayList{
 
 
 void appendToList(ReplayList *list, ReplayNode data);
+void appendPointerToList(ReplayList *list, ReplayNode *node);
 bool deleteFromList(ReplayList *list, ReplayNode *node);
 void deleteList(ReplayList *list);
 
@@ -61,4 +62,6 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer);
 
 
 void saveWithMoves(const char *path, Board *board);
+
+Board* loadMoves(const char *path);
 #endif

@@ -49,4 +49,9 @@ bool checkQueenMove(Board *board, Move move);
 bool checkKingMove(Board *board, Move move, Move *castlingMove, int *newCastlingAvailability);
 
 bool canCastle(Board *board, bool white, bool kingside);
+Square findPawnMovableTo(Square to, Piece moved, Board *b);
+Square findRookMovableTo(Square to, Piece moved, Board *b);
+Square findBishopMovableTo(Square to, Piece moved, Board *b);
+Square findKnightMovableTo(Square to, Piece moved, Board *b);
+Square findQueenMovableTo(Square to, Piece moved, Board *b);
 #endif
