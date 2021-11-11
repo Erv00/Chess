@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <econio.h>
+#include "debugmalloc.h"
 
 const char* processFENPieceData(Board *board, const char *fenStr){
     //Pieces

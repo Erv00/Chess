@@ -18,4 +18,4 @@ clean:
 	-rm ./chess ./chess.zip
 
 package:
-	zip chess.zip $(sources)
+	zip chess.zip src/* include/* doc/* assets/*

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "debugmalloc.h"
 
 int waitForButtonPress(Button buttons[], int length){
     int pressed = -1;

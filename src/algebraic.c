@@ -1,4 +1,5 @@
 #include "algebraic.h"
+#include "debugmalloc.h"
 
 Square algebraicToSquare(const char algebraic[2]){
     Square result;

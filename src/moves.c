@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "debugmalloc.h"
 
 void movePiece(Board *board, Move move){
     if(isKingAt(board, move.from)){

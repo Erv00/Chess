@@ -5,6 +5,7 @@
 #include "board.h"
 #include "algebraic.h"
 #include "graphics.h"
+#include "debugmalloc.h"
 
 void appendToList(ReplayList *list, ReplayNode data){
     ReplayNode *node = malloc(sizeof(ReplayNode));
@@ -22,6 +23,7 @@ void appendToList(ReplayList *list, ReplayNode data){
     } else {
         //Node is not empty, append after last
         list->last->next = node;
+        node->previous = list->last;
         list->last = node;
     }
 
@@ -36,10 +38,23 @@ void appendPointerToList(ReplayList *list, ReplayNode *node){
     } else {
         //Node is not empty, append after last
         list->last->next = node;
+        node->previous = list->last;
         list->last = node;
     }
 
     list->length += 1;
+}
+
+void deleteList(ReplayList *list){
+    ReplayNode *head = list->first;
+    while(head != NULL){
+        ReplayNode *next = head->next;
+        free(head);
+        head = next;
+    }
+    list->first = NULL;
+    list->last = NULL;
+    list->length = 0;
 }
     
 enum MoveUniqueness isMoveUnique(Board *board, Move move){
@@ -194,6 +209,7 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
 
     //Only print last 17 or so full moves
     int stepNumber = 1;
+    int idx = 0;
     bool first = true;
     ReplayNode *node = list.first;
     if(list.length > 17*2){
@@ -201,10 +217,13 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
         for(int length = list.length; length > 17*2; length -= 2){ 
             node = node->next->next;
             ++stepNumber;
+            idx += 2;
         }
     }
 
-    while(node != NULL){
+
+
+    while(node != NULL && idx < list.length){
         //If first, print step number
         if(first){
             char str[7] = {0}; //4 characters are enough, the longest possible chess game is ~9000 moves
@@ -236,6 +255,7 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
         first = !first;
 
         node = node->next;
+        idx++;
     }
 }
 
@@ -294,41 +314,42 @@ ReplayNode* parseMoveStr(const char *moveStr, Board *board){
             node->move.from = board->whiteKing;
             node->move.to = board->whiteKing;
             node->movedPiece = COLOR_WHITE | KING;
+
+            node->rookMove.from = board->whiteKing;
+            node->rookMove.to = board->whiteKing;
         }else{
             node->move.from = board->blackKing;
             node->move.to = board->blackKing;
             node->movedPiece = COLOR_BLACK | KING;
+
+            node->rookMove.from = board->blackKing;
+            node->rookMove.to = board->blackKing;
         }
         if(strcmp(moveStr, "0-0") == 0){
             //Castling kingside
             node->castlingIsKingSide = true;
             node->move.to.file += 2;
+
+            node->rookMove.from.file = 7;
+            node->rookMove.to.file += 1;
         }else{
             //Castling queenside
-            node->move.to.file -= 2;                
+            node->move.to.file -= 2;
+            
+            node->rookMove.from.file = 0;
+            node->rookMove.to.file -= 1;
         }
     } else {
-       //Not castling
+        //Not castling
         for(int idx = 0; idx < length; idx++){
             char curr = moveStr[idx] | 32; //Make all characters lowercase
-            bool couldBeBishop = false;
-            if(curr == 'b'){
-                if(length > 2){
-                    if(idx == 0){
-                        //Piece
-                        couldBeBishop = true;
-                    }else{
-                        if(idx >= length -2)
-                                couldBeBishop = true;
-                    }
-                }
-            }
+            bool isBishop = moveStr[idx] == 'B';
             if(curr == 'x'){
                 //Capture
                 node->isCapture = true;
             }else if(curr == '#' || curr == '+'){
                 //Check(mate)
-            }else if('a' <= curr && curr <= 'h' && !couldBeBishop){ //Extra conditions for bishop
+            }else if('a' <= curr && curr <= 'h' && !isBishop){ //Extra conditions for bishop
                 //Move data or disambiguation
                 //File
                 if(node->move.to.file != 0){
@@ -350,11 +371,12 @@ ReplayNode* parseMoveStr(const char *moveStr, Board *board){
                 node->move.to.rank = curr - '1';
             }else{
                 //Piece specification
-                if(node->movedPiece == 0 && idx < length-2)
-                    node->movedPiece = getPieceFromChar(moveStr[idx]);
+                char color = node->isWhiteMove ? 0 : 32;
+                if(node->movedPiece == 0)
+                    node->movedPiece = getPieceFromChar(moveStr[idx] | color);
                 else
                     //Had piece specified, this is a promotion
-                    node->promotionChoice = getPieceFromChar(moveStr[idx]);
+                    node->promotionChoice = getPieceFromChar(moveStr[idx] | color);
             }
         }
     }
@@ -367,6 +389,8 @@ ReplayNode* parseMoveStr(const char *moveStr, Board *board){
             node->movedPiece |= COLOR_BLACK;
     }
 
+    if(node->isCapture)
+        node->pieceCaptured = at(board, node->move.to);
     //Determine move origin
     if(knownOriginRank && knownOriginFile)
         //Origin is precisely known, return
@@ -447,11 +471,44 @@ Board* loadMoves(const char *path){
 
         //Make move
         movePiece(board, node->move);
+        //If castling aslo move rook
+        if(node->isCastling)
+            movePiece(board, node->rookMove);
 
         //Update board status
         board->checkmate = node->isCheckmate;
         board->nextIsWhite = !board->nextIsWhite;
+
+        printBoard(board);
+    }
+
+    if(board->replayData.length == 0){
+        //File selected was not saved with analysis data: TODO
     }
 
     return board;
+}
+
+void undoMove(Board *board, ReplayNode *node){
+    //Move piece back
+    Move rev = {.from = node->move.to, .to = node->move.from};
+    movePiece(board, rev);
+    //Put captured piece back
+    if(node->isCapture)
+        board->cell[rev.from.rank][rev.from.file] = node->pieceCaptured;
+    //If promotion, demote
+    if(node->isPromotion)
+        board->cell[rev.from.rank][rev.from.file] = PAWN | (node->isWhiteMove ? COLOR_WHITE : COLOR_BLACK);
+    //Move rook back if needed
+    if(node->isCastling){
+        Move rookMove = {.from = node->rookMove.to, .to = node->rookMove.from};
+        movePiece(board, rookMove);
+    }
+}
+
+void redoMove(Board *board, ReplayNode *node){
+    movePiece(board, node->move);
+    if(node->isCastling){
+        movePiece(board, node->rookMove);
+    }
 }

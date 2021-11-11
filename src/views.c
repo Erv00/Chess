@@ -6,6 +6,8 @@
 
 #include <assert.h>
 
+#include "debugmalloc.h"
+
 void renderMenuView(SDL_Renderer *renderer);
 void renderNewGameView(SDL_Renderer *renderer);
 void renderPlayView(Board *board){
@@ -42,7 +44,10 @@ void renderSaveView(SDL_Renderer *renderer, Board *board){
     SDL_RenderPresent(renderer);
 }
 void renderGameOverView(SDL_Renderer *renderer, Board *board);
-void renderAnalysisView(SDL_Renderer *renderer);
+void renderAnalysisView(Board *board){
+    renderBoard(board->renderer, false);
+    renderReplay(board->replayData, board->renderer);
+}
 
 
 void handleMenuView(SDL_Renderer *renderer);
@@ -92,4 +97,52 @@ void handleSaveView(SDL_Renderer *renderer, Board *board){
     }
 }
 void handleGameOverView(SDL_Renderer *renderer, Board *board);
-void handleAnalysisView(SDL_Renderer *renderer);
+void handleAnalysisView(Board *board){
+    //Render view
+    renderAnalysisView(board);
+    renderPieces(board->renderer, board, false);
+    SDL_RenderPresent(board->renderer);
+    //Handle events
+    SDL_Event ev;
+    bool quit = false;
+    while(SDL_WaitEvent(&ev) != 0 && !quit){
+        if(ev.type == SDL_QUIT)
+            break;
+        
+        if(ev.type == SDL_KEYUP){
+            switch(ev.key.keysym.sym){
+                case SDLK_LEFT:
+                    //Step back
+                    if(board->replayData.length != 0){
+                        //Undo step
+                        undoMove(board, board->replayData.last);
+                        board->replayData.last = board->replayData.last->previous;
+                        board->replayData.length -= 1;
+                    }
+                    break;
+                case SDLK_RIGHT:
+                    //Step forward
+                    if(board->replayData.last == NULL){
+                        //Step to start
+                        //Make move
+                        redoMove(board, board->replayData.first);
+                        board->replayData.last = board->replayData.first;
+                        board->replayData.length += 1;
+                    } else if(board->replayData.last->next != NULL){
+                        board->replayData.last = board->replayData.last->next;
+                        redoMove(board, board->replayData.last);
+                        board->replayData.length += 1;
+                    }
+                    break;
+                case SDLK_q:
+                    quit = true;
+                    break;
+            }
+        }//else if(ev.type == )
+        SDL_SetRenderDrawColor(board->renderer, 0,0,0,255);
+        SDL_RenderClear(board->renderer);
+        renderAnalysisView(board);
+        renderPieces(board->renderer, board, false);
+        SDL_RenderPresent(board->renderer);
+    }
+}

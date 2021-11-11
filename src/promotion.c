@@ -1,5 +1,6 @@
 #include "promotion.h"
 #include "graphics.h"
+#include "debugmalloc.h"
 
 void drawPicker(Board *board){
     Piece color = board->nextIsWhite ? COLOR_WHITE : COLOR_BLACK;

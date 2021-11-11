@@ -33,6 +33,8 @@ struct ReplayNode{
     Piece pieceCaptured;
     Piece promotionChoice;
 
+    Move rookMove;
+
     SDL_Texture *texture;
 
     //Linked list
@@ -64,4 +66,6 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer);
 void saveWithMoves(const char *path, Board *board);
 
 Board* loadMoves(const char *path);
+void undoMove(Board *board, ReplayNode *node);
+void redoMove(Board *board, ReplayNode *node);
 #endif

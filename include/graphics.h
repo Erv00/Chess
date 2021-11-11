@@ -25,7 +25,7 @@ void renderPiece(SDL_Renderer *renderer, Piece p, Square at);
 
 void renderBoard(SDL_Renderer *renderer, bool flip);
 
-void renderPieces(SDL_Renderer *renderer, Board *board);
+void renderPieces(SDL_Renderer *renderer, Board *board, bool flip);
 
 //Creates a texture form a string. Stores it's width and height int with and height, any of these may be NULL
 SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height);

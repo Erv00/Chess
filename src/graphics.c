@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include "debugmalloc.h"
 
 static SDL_Texture *PIECE_GRAPHICS[12] = {NULL};
 
@@ -103,9 +104,9 @@ void renderBoard(SDL_Renderer *renderer, bool flip){
     }
 }
 
-void renderPieces(SDL_Renderer *renderer, Board *board){
+void renderPieces(SDL_Renderer *renderer, Board *board, bool flip){
     int rank, fileStart, step;
-    if(board->nextIsWhite){
+    if(!flip){
         //Normal display
         rank = 7;
         fileStart = 0;

@@ -1,6 +1,7 @@
 #include "mouse.h"
 #include "board.h"
 #include "moves.h"
+#include "debugmalloc.h"
 
 void handleMouseEvent(SDL_Event *event, Board *board){
     int x, y;
