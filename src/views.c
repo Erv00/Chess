@@ -118,7 +118,11 @@ void handleAnalysisView(Board *board){
                         undoMove(board, board->replayData.last);
                         board->replayData.last = board->replayData.last->previous;
                         board->replayData.length -= 1;
+                        //Flip next turn
+                        board->nextIsWhite = !board->nextIsWhite;
                     }
+                    //DBG
+                    printBoard(board);
                     break;
                 case SDLK_RIGHT:
                     //Step forward
@@ -128,17 +132,43 @@ void handleAnalysisView(Board *board){
                         redoMove(board, board->replayData.first);
                         board->replayData.last = board->replayData.first;
                         board->replayData.length += 1;
+                        //Flip next turn
+                        board->nextIsWhite = !board->nextIsWhite;
                     } else if(board->replayData.last->next != NULL){
                         board->replayData.last = board->replayData.last->next;
                         redoMove(board, board->replayData.last);
                         board->replayData.length += 1;
+                        //Flip next turn
+                        board->nextIsWhite = !board->nextIsWhite;
                     }
+                    //DBG
+                    printBoard(board);
                     break;
                 case SDLK_q:
                     quit = true;
                     break;
             }
-        }//else if(ev.type == )
+        }
+        if(wasDragAndDrop(&ev, board->mouseState)){
+            //Check if dnd was valid
+            Move m = {
+                .from = board->mouseState.from,
+                .to = mousePosToSquare(board->mouseState.xPos, board->mouseState.yPos, false)
+            };
+            if(isValidSquare(m.to)){
+                //D&D valid, check if move is valid
+                if(isValidMove(board, m, NULL, NULL, NULL)){
+                    //Drag&dropped a valid piece => start game from here
+                    //Free moves after current move
+                    freeListAfter(&board->replayData, board->replayData.last);
+                    //Make move
+                    movePieceWithCheck(board, m);
+                    //return to previous view, which is play
+                    return;
+                }
+            }
+        }
+        updateMouseState(&ev, board, false);
         SDL_SetRenderDrawColor(board->renderer, 0,0,0,255);
         SDL_RenderClear(board->renderer);
         renderAnalysisView(board);

@@ -53,6 +53,7 @@ void appendToList(ReplayList *list, ReplayNode data);
 void appendPointerToList(ReplayList *list, ReplayNode *node);
 bool deleteFromList(ReplayList *list, ReplayNode *node);
 void deleteList(ReplayList *list);
+void freeListAfter(ReplayList *list,ReplayNode *node);
 
 enum MoveUniqueness isMoveUnique(Board *board, Move move);
 

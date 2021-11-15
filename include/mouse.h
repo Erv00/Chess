@@ -14,7 +14,10 @@ typedef struct MouseState{
     int xPos, yPos;
 } MouseState;
 
-void handleMouseEvent(SDL_Event *event, Board *board);
+//Updates the mouses x,y,held,form
+bool wasDragAndDrop(SDL_Event *event, MouseState ms);
+
+void updateMouseState(SDL_Event *event, Board *board, bool flip);
 
 Square mousePosToSquare(int x, int y, bool flip);
 #endif

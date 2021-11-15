@@ -56,6 +56,19 @@ void deleteList(ReplayList *list){
     list->last = NULL;
     list->length = 0;
 }
+
+void freeListAfter(ReplayList *list,ReplayNode *node){
+    if(node == NULL)
+        return;
+    ReplayNode *head = node->next;
+    while(head != NULL){
+        ReplayNode *next = head->next;
+        free(head);
+        head = next;
+        list->length -= 1;
+    }
+    node->next = NULL;
+}
     
 enum MoveUniqueness isMoveUnique(Board *board, Move move){
     //If rook either file or rank may be needed, not both

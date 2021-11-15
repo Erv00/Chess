@@ -1,12 +1,22 @@
 #include "mouse.h"
 #include "board.h"
 #include "moves.h"
+#include "views.h"
 #include "debugmalloc.h"
 
-void handleMouseEvent(SDL_Event *event, Board *board){
+bool wasDragAndDrop(SDL_Event *event, MouseState ms){
+    if(event->type != SDL_MOUSEBUTTONUP)
+        return false;
+    
+    if(ms.held && isValidSquare(ms.from))
+        return true;
+    return false;
+}
+
+void updateMouseState(SDL_Event *event, Board *board, bool flip){
     int x, y;
     SDL_GetMouseState(&x, &y);
-    Square s = mousePosToSquare(x, y, !board->nextIsWhite);
+    Square s = mousePosToSquare(x, y, flip);
     
     if((event->type & SDL_MOUSEMOTION) == SDL_MOUSEMOTION ){
         //Mouse event, handle
@@ -18,20 +28,10 @@ void handleMouseEvent(SDL_Event *event, Board *board){
             if(isValidSquare(s) && !isOpponentAt(board, s)){
                 board->mouseState.held = true;
                 board->mouseState.from = s;
-                printf("Click at %d %d\n", s.rank, s.file);
             }
         } else if(event->type == SDL_MOUSEBUTTONUP){
             //Release
             board->mouseState.held = false;
-            if(isValidSquare(s)){
-                Move m = {
-                    .from = board->mouseState.from,
-                    .to = s
-                };
-                printf("Up at %d %d\n",s.rank,s.file);
-                movePieceWithCheck(board, m);
-                printBoard(board);
-            }
         }
     }
 }
