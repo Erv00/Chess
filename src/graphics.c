@@ -70,38 +70,11 @@ SDL_Texture *getPieceGraphics(Piece p){
 }
 
 void renderBoard(SDL_Renderer *renderer, bool flip){
-    int rank, fileStart, step;
-    if(!flip){
-        //Normal display
-        rank = 7;
-        fileStart = 0;
-        step = 1;
-    } else {
-        //Flipped display
-        rank = 0;
-        fileStart = 7;
-        step = -1;
-    }
-
-    SDL_Rect rect = {
-        .x = 0,
-        .y = 0,
-        .w = 45,
-        .h = 45
-    };
-    for(;rank < 8 && rank >= 0; rank -= step){
-        rect.x = 0;
-        for(int file=fileStart; file < 8 && file >= 0; file += step){
-            if(rank % 2 == file % 2){
-                SDL_SetRenderDrawColor(renderer, 0x76, 0x96, 0x56, 0xff);
-            } else {
-                SDL_SetRenderDrawColor(renderer, 0xee, 0xee, 0xee, 0xd2);
-            }
-            SDL_RenderFillRect(renderer, &rect);
-            rect.x += 45;
-        }
-        rect.y += 45;
-    }
+    Menu toRender = MENU_GAME;
+    if(flip)
+        toRender = MENU_GAME_FLIPPED;
+    SDL_Texture *tex = getMenuTexture(toRender);
+    SDL_RenderCopy(renderer, tex, NULL, NULL);
 }
 
 void renderPieces(SDL_Renderer *renderer, Board *board, bool flip){
@@ -176,7 +149,7 @@ static SDL_Texture *menuTextures[NUM_MENUS] = {NULL};
 bool loadMenuTextures(SDL_Renderer *renderer){
     char path[20] = {0};
     for(int i = 0; i < NUM_MENUS; i++){
-        sprintf(path, "assets/menu_%d.jpg", i);
+        sprintf(path, "assets/menu_%d.png", i);
         SDL_Texture *t = IMG_LoadTexture(renderer, path);
         if(t == NULL){
             printf("Failed to open %s\n", path);

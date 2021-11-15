@@ -525,3 +525,47 @@ void redoMove(Board *board, ReplayNode *node){
         movePiece(board, node->rookMove);
     }
 }
+
+bool handleAnalysisKeypress(Board *board, SDL_Event ev){
+    switch(ev.key.keysym.sym){
+        case SDLK_LEFT:
+            //Step back
+            if(board->replayData.length != 0){
+                //Undo step
+                undoMove(board, board->replayData.last);
+                
+                //Update replay list
+                board->replayData.last = board->replayData.last->previous;
+                board->replayData.length -= 1;
+                
+                //Flip next turn
+                board->nextIsWhite = !board->nextIsWhite;
+            }
+            break;
+        case SDLK_RIGHT:
+            //Step forward
+            ReplayNode *next;
+            if(board->replayData.last == NULL)
+                //Step to first move
+                next = board->replayData.first;
+            else
+                //Step to next move
+                next = board->replayData.last->next;
+
+            if(next != NULL){
+                //Redo move
+                redoMove(board, next);
+
+                //Update replay list
+                board->replayData.last = next;
+                board->replayData.length += 1;
+
+                //Flip next turn
+                board->nextIsWhite = !board->nextIsWhite;
+            }
+            break;
+        case SDLK_q:
+            return true;
+    }
+    return false;
+}

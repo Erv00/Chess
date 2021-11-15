@@ -69,4 +69,15 @@ void saveWithMoves(const char *path, Board *board);
 Board* loadMoves(const char *path);
 void undoMove(Board *board, ReplayNode *node);
 void redoMove(Board *board, ReplayNode *node);
+
+/**
+ * @brief Kezel egy gombnyomást analízis nézetben
+ * 
+ * @param board A tábla amivel dolgozik
+ * @param ev A gombnyomás event
+ * 
+ * @return true Ha a felhasználó ki szeretne lépni
+ * @return false Ellenkező esetben
+ */
+bool handleAnalysisKeypress(Board *board, SDL_Event ev);
 #endif

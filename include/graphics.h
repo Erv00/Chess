@@ -40,6 +40,7 @@ typedef enum {
     MENU_LOAD,
     MENU_NEW_GAME,
     MENU_GAME,
+    MENU_GAME_FLIPPED,
     MENU_SAVE,
     MENU_GAME_OVER,
     MENU_ANALYZE,

@@ -14,19 +14,11 @@ void renderPlayView(Board *board){
     //Render board
     renderBoard(board->renderer, !board->nextIsWhite);
 
+    //Render pieces
+    renderPieces(board->renderer, board, !board->nextIsWhite);
+
     //Render past steps
     renderReplay(board->replayData, board->renderer);
-
-    //Render save button
-    SDL_Rect button = {
-        .x = 8*45,
-        .y = 7*45,
-        .w = 4*45,
-        .h = 45
-    };
-
-    SDL_SetRenderDrawColor(board->renderer, 0x76, 0x96, 0x56, 0xff);
-    SDL_RenderFillRect(board->renderer, &button);
 }
 void renderSaveView(SDL_Renderer *renderer, Board *board){
     //Clear screen
@@ -52,7 +44,42 @@ void renderAnalysisView(Board *board){
 
 void handleMenuView(SDL_Renderer *renderer);
 void handleNewGameView(SDL_Renderer *renderer);
-void handlePlayView(Board *board);
+void handlePlayView(Board *board){
+    //Save button
+    SDL_Rect buttons[1] = {{
+        .x = 8*45,
+        .y = 7*45,
+        .w = 4*45,
+        .h = 45
+    }};
+
+    SDL_Event ev;
+    bool quit = false;
+    while(!quit && SDL_WaitEvent(&ev) != 0){
+        //Render view
+        renderPlayView(board);
+        SDL_RenderPresent(board->renderer);
+
+        //If pressed q, exit to main menu
+        if(ev.type == SDL_KEYUP){
+            if(ev.key.keysym.sym == SDLK_q){
+                quit = true;
+            }
+        }
+
+        //If was dragging but dropped, make move
+        if(wasDragAndDrop(&ev, board->mouseState)){
+            Move m = {
+                .from = board->mouseState.from,
+                .to = mousePosToSquare(board->mouseState.xPos, board->mouseState.yPos, !board->nextIsWhite)
+            };
+            movePieceWithCheck(board, m);
+        }
+
+        //Update mouse state
+        updateMouseState(&ev, board, !board->nextIsWhite);
+    }
+}
 void handleSaveView(SDL_Renderer *renderer, Board *board){
     //Render menu
     renderSaveView(renderer, board);
@@ -102,6 +129,7 @@ void handleAnalysisView(Board *board){
     renderAnalysisView(board);
     renderPieces(board->renderer, board, false);
     SDL_RenderPresent(board->renderer);
+
     //Handle events
     SDL_Event ev;
     bool quit = false;
@@ -110,45 +138,10 @@ void handleAnalysisView(Board *board){
             break;
         
         if(ev.type == SDL_KEYUP){
-            switch(ev.key.keysym.sym){
-                case SDLK_LEFT:
-                    //Step back
-                    if(board->replayData.length != 0){
-                        //Undo step
-                        undoMove(board, board->replayData.last);
-                        board->replayData.last = board->replayData.last->previous;
-                        board->replayData.length -= 1;
-                        //Flip next turn
-                        board->nextIsWhite = !board->nextIsWhite;
-                    }
-                    //DBG
-                    printBoard(board);
-                    break;
-                case SDLK_RIGHT:
-                    //Step forward
-                    if(board->replayData.last == NULL){
-                        //Step to start
-                        //Make move
-                        redoMove(board, board->replayData.first);
-                        board->replayData.last = board->replayData.first;
-                        board->replayData.length += 1;
-                        //Flip next turn
-                        board->nextIsWhite = !board->nextIsWhite;
-                    } else if(board->replayData.last->next != NULL){
-                        board->replayData.last = board->replayData.last->next;
-                        redoMove(board, board->replayData.last);
-                        board->replayData.length += 1;
-                        //Flip next turn
-                        board->nextIsWhite = !board->nextIsWhite;
-                    }
-                    //DBG
-                    printBoard(board);
-                    break;
-                case SDLK_q:
-                    quit = true;
-                    break;
-            }
+            quit = handleAnalysisKeypress(board, ev);
         }
+
+        //Check for mouse events
         if(wasDragAndDrop(&ev, board->mouseState)){
             //Check if dnd was valid
             Move m = {
@@ -161,13 +154,16 @@ void handleAnalysisView(Board *board){
                     //Drag&dropped a valid piece => start game from here
                     //Free moves after current move
                     freeListAfter(&board->replayData, board->replayData.last);
+
                     //Make move
                     movePieceWithCheck(board, m);
                     //return to previous view, which is play
-                    return;
+                    quit = true;
                 }
             }
         }
+
+        //Update mouse and render
         updateMouseState(&ev, board, false);
         SDL_SetRenderDrawColor(board->renderer, 0,0,0,255);
         SDL_RenderClear(board->renderer);
