@@ -26,6 +26,8 @@ typedef struct Board {
     //Renderer associated with the board, may be null if nut using graphics
     SDL_Renderer *renderer;
 
+    //False if loaded without moves
+    bool hasReplayData;
     ReplayList replayData;
 } Board;
 
@@ -50,7 +52,21 @@ void checkBoardStatus(Board *board);
 
 void saveWithoutMoves(const char *path, Board *board);
 
+/**
+ * @brief Betölt egy játékállást
+ * 
+ * @param path A betöltendő fájl elérési útja
+ * @param renderer A tábla renderere
+ * @return Board* Egy tábla amely a megfelelő állásban van
+ */
+Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer);
 
+/**
+ * @brief Felszabadítja a táblát, és hozzá tartozó replayData-t
+ * 
+ * @param board A felszabadítandó tábla
+ */
+void destroyBoard(Board *board);
 
 Piece at(Board *board, Square square);
 

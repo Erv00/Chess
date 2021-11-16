@@ -139,7 +139,9 @@ int getCastlingString(Board *board, char cast[4]){
 
 //Starts a new game
 Board* newGameFromStart(SDL_Renderer *renderer){
-    return newGameFromFen(START_FEN, renderer);
+    Board *board =  newGameFromFen(START_FEN, renderer);
+    board->hasReplayData = true;
+    return board;
 }
 
 //Prints the board
@@ -287,6 +289,27 @@ void saveWithoutMoves(const char *path, Board *board){
     free(fen);
     //Close file
     fclose(saveFile);
+}
+
+Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer){
+    FILE *saveFile = fopen(path, "r");
+    if(saveFile == NULL){
+        //TODO: Handle
+        abort();
+    }
+
+    char fen[90]; //Bit extra for the longest possible fen string
+    fgets(fen, 90, saveFile);
+    Board *board = newGameFromFen(fen, renderer);
+
+    fclose(saveFile);
+
+    return board;
+}
+
+void destroyBoard(Board *board){
+    deleteList(&board->replayData);
+    free(board);
 }
 
 Piece at(Board *board, Square square){

@@ -30,6 +30,18 @@ void renderPieces(SDL_Renderer *renderer, Board *board, bool flip);
 //Creates a texture form a string. Stores it's width and height int with and height, any of these may be NULL
 SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height);
 
+/**
+ * @brief Az adott sztringet fekete vagy fehér színben nagy betűmérettel és vastagon rendereli
+ * 
+ * @param renderer Renderer
+ * @param str Amit rendererelni kell
+ * @param width A textúra szélessége ide íródik ha nem NULL
+ * @param height A textúra magassága ide íródik ha nem NULL
+ * @param white Ha igaz a szöveg fehér, egyébként fekete
+ * @return SDL_Texture* A textúra
+ */
+SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height, bool white);
+
 //Loads the menu textures
 bool loadMenuTextures(SDL_Renderer *renderer);
 

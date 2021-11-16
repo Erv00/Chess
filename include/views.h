@@ -7,16 +7,18 @@
 
 void renderMenuView(SDL_Renderer *renderer);
 void renderNewGameView(SDL_Renderer *renderer);
+void renderLoadView(SDL_Renderer *renderer);
 void renderPlayView(Board *board);
 void renderSaveView(SDL_Renderer *renderer, Board *board);
-void renderGameOverView(SDL_Renderer *renderer, Board *board);
+void renderGameOverView(Board *board);
 void renderAnalysisView(Board *board);
 
 
 void handleMenuView(SDL_Renderer *renderer);
 void handleNewGameView(SDL_Renderer *renderer);
+void handleLoadView(SDL_Renderer *renderer);
 void handlePlayView(Board *board);
-void handleSaveView(SDL_Renderer *renderer, Board *board);
-void handleGameOverView(SDL_Renderer *renderer, Board *board);
+void handleSaveView(Board *board);
+void handleGameOverView(Board *board);
 void handleAnalysisView(Board *board);
 #endif

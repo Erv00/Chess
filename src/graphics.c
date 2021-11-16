@@ -144,6 +144,40 @@ SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width
     return tex;
 }
 
+SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height, bool white){
+    static TTF_Font *font = NULL;
+
+    //Open font if not opened
+    if(font == NULL){
+        font = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 42);
+        if(font == NULL){
+            fprintf(stderr, "Failed to open font: %s\n", SDL_GetError());
+            exit(-1);
+        }
+        TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    }
+
+    SDL_Color col = {255,255,255,255};
+    if(!white){
+        col.r = 0;
+        col.g = 0;
+        col.b = 0;
+    }
+
+    SDL_Surface *surf = TTF_RenderUTF8_Blended(font, str, col);
+
+    if(width != NULL)
+        *width = surf->w;
+    if(height != NULL)
+        *height = surf->h;
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
+
+    SDL_FreeSurface(surf);
+    return tex;
+
+}
+
 static SDL_Texture *menuTextures[NUM_MENUS] = {NULL};
 
 bool loadMenuTextures(SDL_Renderer *renderer){

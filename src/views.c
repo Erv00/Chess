@@ -8,8 +8,15 @@
 
 #include "debugmalloc.h"
 
-void renderMenuView(SDL_Renderer *renderer);
-void renderNewGameView(SDL_Renderer *renderer);
+void renderMenuView(SDL_Renderer *renderer){
+    SDL_RenderCopy(renderer, getMenuTexture(MENU_MAIN), NULL, NULL);
+}
+void renderNewGameView(SDL_Renderer *renderer){
+    SDL_RenderCopy(renderer, getMenuTexture(MENU_NEW_GAME), NULL, NULL);
+}
+void renderLoadView(SDL_Renderer *renderer){
+    SDL_RenderCopy(renderer, getMenuTexture(MENU_LOAD), NULL, NULL);
+}
 void renderPlayView(Board *board){
     //Render board
     renderBoard(board->renderer, !board->nextIsWhite);
@@ -18,7 +25,8 @@ void renderPlayView(Board *board){
     renderPieces(board->renderer, board, !board->nextIsWhite);
 
     //Render past steps
-    renderReplay(board->replayData, board->renderer);
+    if(board->hasReplayData)
+        renderReplay(board->replayData, board->renderer);
 }
 void renderSaveView(SDL_Renderer *renderer, Board *board){
     //Clear screen
@@ -35,15 +43,209 @@ void renderSaveView(SDL_Renderer *renderer, Board *board){
     //Save path input: TODO
     SDL_RenderPresent(renderer);
 }
-void renderGameOverView(SDL_Renderer *renderer, Board *board);
+void renderGameOverView(Board *board){
+    SDL_RenderCopy(board->renderer, getMenuTexture(MENU_GAME_OVER), NULL, NULL);
+
+    bool white = !board->nextIsWhite;
+
+    //Render extras
+    Piece pieceToRender = QUEEN;
+    SDL_Texture *winnerStr;
+    SDL_Rect winnerDst = {.x = 4*45, .y = 45};
+
+    SDL_Rect wonDst = {.x = 4*45, .y = 2*45};
+    SDL_Texture *wonStr = winStringToTexture(board->renderer, "NYERT!", &wonDst.w, &wonDst.h, white);
+
+    if(white){
+        //White won
+        pieceToRender |= COLOR_WHITE;
+        winnerStr = winStringToTexture(board->renderer, "FEHÉR", &winnerDst.w, &winnerDst.h, white);
+    }else{
+        //Black won, also render white box
+        SDL_Rect bg = {
+            .x = 3*45,
+            .y = 2*45,
+            .w = 6*45,
+            .h = 3*45
+        };
+        SDL_SetRenderDrawColor(board->renderer, 255,255,255,255);
+        SDL_RenderFillRect(board->renderer, &bg);
+
+        pieceToRender |= COLOR_BLACK;
+        winnerStr = winStringToTexture(board->renderer, "FEKETE", &winnerDst.w, &winnerDst.h, white);
+    }
+
+    //Center texts
+    winnerDst.x += (4*45-winnerDst.w)/2;
+    wonDst.x += (4*45-wonDst.w)/2;
+
+    //Render pieces
+    SDL_Rect pieceDst = {.x = 3*45, .y = 2*45, .w = 45, .h = 45};
+    SDL_RenderCopy(board->renderer, getPieceGraphics(pieceToRender), NULL, &pieceDst);
+    pieceDst.x = 8*45;
+    SDL_RenderCopy(board->renderer, getPieceGraphics(pieceToRender), NULL, &pieceDst);
+
+    //Render texts
+    SDL_RenderCopy(board->renderer, winnerStr, NULL, &winnerDst);
+    SDL_RenderCopy(board->renderer, wonStr, NULL, &wonDst);
+
+    //Free text textures
+    SDL_DestroyTexture(wonStr);
+    SDL_DestroyTexture(winnerStr);
+}
 void renderAnalysisView(Board *board){
     renderBoard(board->renderer, false);
     renderReplay(board->replayData, board->renderer);
 }
 
 
-void handleMenuView(SDL_Renderer *renderer);
-void handleNewGameView(SDL_Renderer *renderer);
+void handleMenuView(SDL_Renderer *renderer){
+    Button buttons[] = {
+        //New game
+        {
+            .x = 3*45,
+            .y = 3*45,
+            .w = 6*45,
+            .h = 45
+        },
+
+        //Load
+        {
+            .x = 3*45,
+            .y = 5*45,
+            .w = 6*45,
+            .h = 45
+        },
+
+        //Quit
+        {
+            .x = 9*45,
+            .y = 7*45,
+            .w = 3*45,
+            .h = 45
+        }
+    };
+
+    renderMenuView(renderer);
+    SDL_RenderPresent(renderer);
+    switch(waitForButtonPress(buttons, 3)){
+        case 0: //New game
+            handleNewGameView(renderer);
+            break;
+        case 1: //Load
+            handleLoadView(renderer);
+            break;
+        //Default: quit
+    }
+
+}
+void handleNewGameView(SDL_Renderer *renderer){
+    Button buttons[] = {
+        //15 min
+        {
+            .x = 2*45,
+            .y = 2*45,
+            .w = 2*45,
+            .h = 2*45
+        },
+
+        //20 min
+        {
+            .x = 5*45,
+            .y = 2*45,
+            .w = 2*45,
+            .h = 2*45
+        },
+
+        //25 min
+        {
+            .x = 8*45,
+            .y = 2*45,
+            .w = 2*45,
+            .h = 2*45
+        },
+
+        //30 min
+        {
+            .x = 5*45,
+            .y = 5*45,
+            .w = 2*45,
+            .h = 2*45
+        },
+
+        //Cancel
+        {
+            .x = 9*45,
+            .y = 7*45,
+            .w = 3*45,
+            .h = 45
+        }
+    };
+
+    renderNewGameView(renderer);
+    SDL_RenderPresent(renderer);
+
+    int pressed = waitForButtonPress(buttons, 5);
+    if(pressed == -1 || pressed == 4)
+        //Cancel
+        return;
+    
+    int time = 15 + pressed*5;
+
+    //Start game
+    Board *board = newGameFromStart(renderer);
+    handlePlayView(board);
+    destroyBoard(board);
+}
+void handleLoadView(SDL_Renderer *renderer){
+    Button buttons[] = {
+        //Continue
+        {
+            .x = 3*45,
+            .y = 3*45,
+            .w = 6*45,
+            .h = 45
+        },
+
+        //Analysis
+        {
+            .x = 3*45,
+            .y = 5*45,
+            .w = 6*45,
+            .h = 45
+        },
+
+        //Cancel
+        {
+            .x = 9*45,
+            .y = 7*45,
+            .w = 3*45,
+            .h = 45
+        }
+    };
+
+    //TODO: Add interface to specify path
+    char *path = "state.sch";
+
+    renderLoadView(renderer);
+    SDL_RenderPresent(renderer);
+    Board *board = NULL;
+    switch(waitForButtonPress(buttons, 3)){
+        case 0: //Continue
+            board = loadWithoutMoves(path, renderer);
+            board->renderer = renderer;
+            handlePlayView(board);
+            break;
+        case 1: //Analysis
+            board = loadMoves(path);
+            board->renderer = renderer;
+            handleAnalysisView(board);
+            break;
+        //default: cancel
+    }
+    if(board != NULL)
+        destroyBoard(board);
+}
 void handlePlayView(Board *board){
     //Save button
     SDL_Rect buttons[1] = {{
@@ -55,7 +257,7 @@ void handlePlayView(Board *board){
 
     SDL_Event ev;
     bool quit = false;
-    while(!quit && SDL_WaitEvent(&ev) != 0){
+    while(!quit && !board->checkmate && SDL_WaitEvent(&ev) != 0){
         //Render view
         renderPlayView(board);
         SDL_RenderPresent(board->renderer);
@@ -79,10 +281,14 @@ void handlePlayView(Board *board){
         //Update mouse state
         updateMouseState(&ev, board, !board->nextIsWhite);
     }
+
+    if(board->checkmate)
+        //Checkmate
+        handleGameOverView(board);
 }
-void handleSaveView(SDL_Renderer *renderer, Board *board){
+void handleSaveView(Board *board){
     //Render menu
-    renderSaveView(renderer, board);
+    renderSaveView(board->renderer, board);
     //Get save path: TODO
     char path[] = "./state.sch";
     //Check if saving step replay & save
@@ -123,7 +329,37 @@ void handleSaveView(SDL_Renderer *renderer, Board *board){
             break;
     }
 }
-void handleGameOverView(SDL_Renderer *renderer, Board *board);
+void handleGameOverView(Board *board){
+    //Buttons
+    Button buttons[] = {
+        //Main menu
+        {
+            .x = 3*45,
+            .y = 5*45,
+            .w = 2.5*45,
+            .h = 45
+        },
+
+        //Save
+        {
+            .x = 6.5*45,
+            .y = 5*45,
+            .w = 2.5*45,
+            .h = 45
+        }
+    };
+
+
+    //Render end result
+    renderGameOverView(board);
+    SDL_RenderPresent(board->renderer);
+
+    int buttonPressed = waitForButtonPress(buttons, 2);
+    if(buttonPressed == 1){
+        //Clicked save button
+        handleSaveView(board);
+    }
+}
 void handleAnalysisView(Board *board){
     //Render view
     renderAnalysisView(board);
@@ -133,7 +369,7 @@ void handleAnalysisView(Board *board){
     //Handle events
     SDL_Event ev;
     bool quit = false;
-    while(SDL_WaitEvent(&ev) != 0 && !quit){
+    while(!quit && SDL_WaitEvent(&ev) != 0){
         if(ev.type == SDL_QUIT)
             break;
         
@@ -157,8 +393,10 @@ void handleAnalysisView(Board *board){
 
                     //Make move
                     movePieceWithCheck(board, m);
-                    //return to previous view, which is play
-                    quit = true;
+
+                    //Go to play view
+                    handlePlayView(board);
+                    return;
                 }
             }
         }
