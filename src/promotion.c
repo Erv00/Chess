@@ -41,6 +41,14 @@ Piece getChoice(Board *board){
         case SDL_MOUSEBUTTONUP:
             //Mouse
             return checkMouseSelect(color, &e);
+        case SDL_USEREVENT:
+            //Tick clock
+            updateCorrectClock(board);
+            //TODO: Game over if clock runs out
+            break;
+        case SDL_QUIT:
+            //TODO: HANDLE
+            break;
         }
     }
 }

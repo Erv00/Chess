@@ -116,6 +116,9 @@ Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer){
     //Half and full-moves
     sscanf(fenStr, "%d %d", &b->halfmoveClock, &b->fullmoveCounter);
     b->renderer = renderer;
+
+    b->whiteClock = newClock(3, renderer, true);
+    b->blackClock = newClock(900, renderer, false);
     return b;
 }
 
@@ -138,9 +141,11 @@ int getCastlingString(Board *board, char cast[4]){
 }
 
 //Starts a new game
-Board* newGameFromStart(SDL_Renderer *renderer){
+Board* newGameFromStart(SDL_Renderer *renderer, int time){
     Board *board =  newGameFromFen(START_FEN, renderer);
     board->hasReplayData = true;
+    board->whiteClock = newClock(time, renderer, true);
+    board->blackClock = newClock(time, renderer, false);
     return board;
 }
 
@@ -312,6 +317,11 @@ void destroyBoard(Board *board){
     free(board);
 }
 
+bool updateCorrectClock(Board *board){
+    if(board->nextIsWhite)
+        return clockTick(&board->whiteClock);
+    return clockTick(&board->blackClock);
+}
 Piece at(Board *board, Square square){
     return board->cell[square.rank][square.file];
 }

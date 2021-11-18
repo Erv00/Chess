@@ -8,6 +8,7 @@
 #include "piece.h"
 #include "mouse.h"
 #include "analysis.h"
+#include "clock.h"
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -22,6 +23,8 @@ typedef struct Board {
     Square blackKing;
     bool checkmate;
 
+    Clock whiteClock, blackClock;
+
     MouseState mouseState;
     //Renderer associated with the board, may be null if nut using graphics
     SDL_Renderer *renderer;
@@ -29,6 +32,11 @@ typedef struct Board {
     //False if loaded without moves
     bool hasReplayData;
     ReplayList replayData;
+
+    bool quit;
+    bool gameOver;
+    bool draw;
+    bool whiteWon;
 } Board;
 
 //Loads a game state from a FEN string, and returnes the game
@@ -38,8 +46,14 @@ Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer);
 //Returnes the length of the string
 int getCastlingString(Board *board, char cast[4]);
 
-//Starts a new game
-Board* newGameFromStart(SDL_Renderer *renderer);
+/**
+ * @brief Új játékot kezd az alapállásból
+ * 
+ * @param renderer A használt renderer
+ * @param time Egy játékosra jutó idő, másodpercben
+ * @return Board* A játéktábla
+ */
+Board* newGameFromStart(SDL_Renderer *renderer, int time);
 
 //Prints the board
 void printBoard(Board *board);
@@ -67,6 +81,15 @@ Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer);
  * @param board A felszabadítandó tábla
  */
 void destroyBoard(Board *board);
+
+/**
+ * @brief Lépteti a megfelelő órát
+ * 
+ * @param board A tábla aminek az óráját lépteti
+ * @return true Ha az adoot óra lejárt
+ * @return false Ellenkező esetben
+ */
+bool updateCorrectClock(Board *board);
 
 Piece at(Board *board, Square square);
 

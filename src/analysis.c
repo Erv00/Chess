@@ -471,7 +471,7 @@ Board* loadMoves(const char *path){
     //Read fen
     char fen[90]; //Bit extra for the longest possible fen string
     fgets(fen, 90, saveFile);
-    Board *board = newGameFromStart(NULL);
+    Board *board = newGameFromStart(NULL, 1);
 
     //While not empty parse string
 

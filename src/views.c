@@ -7,7 +7,13 @@
 #include <assert.h>
 
 #include "debugmalloc.h"
-
+Uint32 oneSecondTick(Uint32 ms, void *param){
+    SDL_Event ev;
+    ev.type = SDL_USEREVENT;
+    SDL_PushEvent(&ev);
+    printf("CLK %u\n", SDL_GetTicks());
+    return ms;
+}
 void renderMenuView(SDL_Renderer *renderer){
     SDL_RenderCopy(renderer, getMenuTexture(MENU_MAIN), NULL, NULL);
 }
@@ -27,6 +33,23 @@ void renderPlayView(Board *board){
     //Render past steps
     if(board->hasReplayData)
         renderReplay(board->replayData, board->renderer);
+
+    //Render clock
+    //White
+    SDL_Rect whiteClkRect = {
+        .x = 8*45,
+        .y = 6*45,
+        .w = 2*45,
+        .h = 45
+    };
+    SDL_RenderCopy(board->renderer, board->whiteClock.texture, NULL, &whiteClkRect);
+    SDL_Rect blackClkRect = {
+        .x = 10*45,
+        .y = 6*45,
+        .w = 2*45,
+        .h = 45
+    };
+    SDL_RenderCopy(board->renderer, board->blackClock.texture, NULL, &blackClkRect);
 }
 void renderSaveView(SDL_Renderer *renderer, Board *board){
     //Clear screen
@@ -46,7 +69,7 @@ void renderSaveView(SDL_Renderer *renderer, Board *board){
 void renderGameOverView(Board *board){
     SDL_RenderCopy(board->renderer, getMenuTexture(MENU_GAME_OVER), NULL, NULL);
 
-    bool white = !board->nextIsWhite;
+    bool white = board->whiteWon;
 
     //Render extras
     Piece pieceToRender = QUEEN;
@@ -64,9 +87,9 @@ void renderGameOverView(Board *board){
         //Black won, also render white box
         SDL_Rect bg = {
             .x = 3*45,
-            .y = 2*45,
+            .y = 45,
             .w = 6*45,
-            .h = 3*45
+            .h = 2*45
         };
         SDL_SetRenderDrawColor(board->renderer, 255,255,255,255);
         SDL_RenderFillRect(board->renderer, &bg);
@@ -190,10 +213,10 @@ void handleNewGameView(SDL_Renderer *renderer){
         //Cancel
         return;
     
-    int time = 15 + pressed*5;
+    int time = 15*60 + pressed*5*60;
 
     //Start game
-    Board *board = newGameFromStart(renderer);
+    Board *board = newGameFromStart(renderer, time);
     handlePlayView(board);
     destroyBoard(board);
 }
@@ -257,15 +280,24 @@ void handlePlayView(Board *board){
 
     SDL_Event ev;
     bool quit = false;
-    while(!quit && !board->checkmate && SDL_WaitEvent(&ev) != 0){
-        //Render view
-        renderPlayView(board);
-        SDL_RenderPresent(board->renderer);
-
+    int clk = SDL_AddTimer(1000, oneSecondTick, NULL);
+    renderPlayView(board);
+    SDL_RenderPresent(board->renderer);
+    
+    while(!quit && !board->quit && !board->gameOver && SDL_WaitEvent(&ev) != 0){
         //If pressed q, exit to main menu
         if(ev.type == SDL_KEYUP){
             if(ev.key.keysym.sym == SDLK_q){
                 quit = true;
+            }
+        }
+
+        if(ev.type == SDL_USEREVENT){
+            //Timer tick, decrease player time
+            if(updateCorrectClock(board)){
+                board->gameOver = true;
+                board->draw = false;
+                board->whiteWon = !board->nextIsWhite;
             }
         }
 
@@ -280,9 +312,15 @@ void handlePlayView(Board *board){
 
         //Update mouse state
         updateMouseState(&ev, board, !board->nextIsWhite);
+
+        //Render view
+        renderPlayView(board);
+        SDL_RenderPresent(board->renderer);
     }
 
-    if(board->checkmate)
+    SDL_RemoveTimer(clk);
+
+    if(board->gameOver && !board->draw)
         //Checkmate
         handleGameOverView(board);
 }
