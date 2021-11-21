@@ -6,6 +6,8 @@
 #include "algebraic.h"
 #include "graphics.h"
 #include "debugmalloc.h"
+#include "fen.h"
+#include "loading.h"
 
 void appendToList(ReplayList *list, ReplayNode data){
     ReplayNode *node = malloc(sizeof(ReplayNode));
@@ -49,6 +51,8 @@ void deleteList(ReplayList *list){
     ReplayNode *head = list->first;
     while(head != NULL){
         ReplayNode *next = head->next;
+        if(head->texture != NULL)
+            SDL_DestroyTexture(head->texture);
         free(head);
         head = next;
     }
@@ -80,7 +84,7 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
 
     Move capture = move;
 
-    Piece checkedPiece = at(board, move.from);
+    Piece checkedPiece = *at(board, move.from);
 
     if(!isKnight(checkedPiece)){
         //Check in file, by changeing rank
@@ -90,7 +94,7 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
                 //Don't count the piece we're checking
                 continue;
 
-            if(at(board, capture.from) == checkedPiece){
+            if(*at(board, capture.from) == checkedPiece){
                 //Same piece type, good candidate
                 if(isValidMove(board, capture, NULL, NULL, NULL)){
                     //Piece in the same file can take target
@@ -108,7 +112,7 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
                 //Don't count the piece we're checking
                 continue;
 
-            if(at(board, capture.from) == checkedPiece){
+            if(*at(board, capture.from) == checkedPiece){
                 //Same piece type, good candidate
                 if(isValidMove(board, capture, NULL, NULL, NULL)){
                     ret ^= RANK_UNIQUE;
@@ -145,8 +149,7 @@ enum MoveUniqueness isMoveUnique(Board *board, Move move){
     return ret;
 }
 
-int nodeToString(ReplayNode *node, char *out){
-    char *orig = out;
+void nodeToString(ReplayNode *node, char *out){
     if(node->isCastling){
         //Castling
         memcpy(out, "0-0", 3);
@@ -199,7 +202,6 @@ int nodeToString(ReplayNode *node, char *out){
         *out++= '+';
 
     *out = '\0';
-    return out - orig + 1;
 }
 
 void createNodeTexture(ReplayNode *node, SDL_Renderer *renderer){
@@ -220,14 +222,14 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
         .y = 0,
     };
 
-    //Only print last 17 or so full moves
+    //Only print last 15 or so full moves
     int stepNumber = 1;
     int idx = 0;
     bool first = true;
     ReplayNode *node = list.first;
-    if(list.length > 17*2){
-        //More than we can display
-        for(int length = list.length; length > 17*2; length -= 2){ 
+    if(list.length > 15*2){
+        //More than we can display, advance
+        for(int length = list.length; length > 15*2; length -= 2){ 
             node = node->next->next;
             ++stepNumber;
             idx += 2;
@@ -235,11 +237,10 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
     }
 
 
-
     while(node != NULL && idx < list.length){
         //If first, print step number
         if(first){
-            char str[7] = {0}; //4 characters are enough, the longest possible chess game is ~9000 moves
+            char str[7] = {0}; //6 characters are enough, the longest possible chess game is ~9000 moves
             sprintf(str, "%d. ", stepNumber);
             SDL_Texture *tex = stringToTexture(renderer, str, &dst.w, &dst.h);
             SDL_RenderCopy(renderer, tex, NULL, &dst);
@@ -256,7 +257,6 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
 
         if(first){
             //Printed first, go to next column
-            //dst.x += dst.w + 20;
             dst.x = 10*45;
         }else{
             //Printed second, go to next row
@@ -301,217 +301,18 @@ void saveWithMoves(const char *path, Board *board){
     fclose(saveFile);
 }
 
-ReplayNode* parseMoveStr(const char *moveStr, Board *board){
-    ReplayNode *node = malloc(sizeof(ReplayNode));
-    if(node == NULL){
-        fprintf(stderr, "Failed to alloc memory for node\n");
-        exit(-1);
-    }
-
-    //Zero out for bools
-    memset(node, 0, sizeof(ReplayNode));
-    int length = strlen(moveStr);
-    bool knownOriginRank = false;
-    bool knownOriginFile = false;
-   
-    //Set defaults
-    node->isWhiteMove = board->nextIsWhite;
-    node->isCheckmate = moveStr[length-1] == '#';
-    node->isCheck = node->isCheckmate || moveStr[length-1] == '+';
-    node->moveUniqueness = UNIQUE;
-
-    if(moveStr[0] == '0'){
-        //Castling
-        node->isCastling = true;
-        if(board->nextIsWhite){
-            node->move.from = board->whiteKing;
-            node->move.to = board->whiteKing;
-            node->movedPiece = COLOR_WHITE | KING;
-
-            node->rookMove.from = board->whiteKing;
-            node->rookMove.to = board->whiteKing;
-        }else{
-            node->move.from = board->blackKing;
-            node->move.to = board->blackKing;
-            node->movedPiece = COLOR_BLACK | KING;
-
-            node->rookMove.from = board->blackKing;
-            node->rookMove.to = board->blackKing;
-        }
-        if(strcmp(moveStr, "0-0") == 0){
-            //Castling kingside
-            node->castlingIsKingSide = true;
-            node->move.to.file += 2;
-
-            node->rookMove.from.file = 7;
-            node->rookMove.to.file += 1;
-        }else{
-            //Castling queenside
-            node->move.to.file -= 2;
-            
-            node->rookMove.from.file = 0;
-            node->rookMove.to.file -= 1;
-        }
-    } else {
-        //Not castling
-        for(int idx = 0; idx < length; idx++){
-            char curr = moveStr[idx] | 32; //Make all characters lowercase
-            bool isBishop = moveStr[idx] == 'B';
-            if(curr == 'x'){
-                //Capture
-                node->isCapture = true;
-            }else if(curr == '#' || curr == '+'){
-                //Check(mate)
-            }else if('a' <= curr && curr <= 'h' && !isBishop){ //Extra conditions for bishop
-                //Move data or disambiguation
-                //File
-                if(node->move.to.file != 0){
-                    //Already had a file, that was a disambiguation
-                    node->move.from.file = node->move.to.file;
-                    knownOriginFile = true;
-                    if(node->movedPiece != 0)
-                        node->moveUniqueness ^= FILE_UNIQUE;
-                }
-                node->move.to.file = curr - 'a';
-            }else if('1' <= curr && curr <= '8'){
-                //Move data or disambiguation
-                //Rank
-                if(node->move.to.rank != 0){
-                    //Already had a rank, that was a disambiguation
-                    node->move.from.rank = node->move.to.rank;
-                    node->moveUniqueness ^= RANK_UNIQUE;
-                }
-                node->move.to.rank = curr - '1';
-            }else{
-                //Piece specification
-                char color = node->isWhiteMove ? 0 : 32;
-                if(node->movedPiece == 0)
-                    node->movedPiece = getPieceFromChar(moveStr[idx] | color);
-                else
-                    //Had piece specified, this is a promotion
-                    node->promotionChoice = getPieceFromChar(moveStr[idx] | color);
-            }
-        }
-    }
-
-    if(node->movedPiece == 0){
-        node->movedPiece = PAWN;
-        if(board->nextIsWhite)
-            node->movedPiece |= COLOR_WHITE;
-        else
-            node->movedPiece |= COLOR_BLACK;
-    }
-
-    if(node->isCapture)
-        node->pieceCaptured = at(board, node->move.to);
-    //Determine move origin
-    if(knownOriginRank && knownOriginFile)
-        //Origin is precisely known, return
-        return node;
-
-    if(knownOriginRank){
-        //Rank known, file unknow
-        for(int file = 0; file < 8; file++){
-            node->move.from.file = file;
-            if(at(board, node->move.from) == node->movedPiece)
-                //Found piece, check if can move
-                if(isValidMove(board, node->move, NULL, NULL, NULL))
-                    //Found piece
-                    break;
-        }
-    }else if(knownOriginFile){
-        //Rank unknown, file know
-        for(int rank = 0; rank < 8; rank++){
-            node->move.from.rank = rank;
-            if(at(board, node->move.from) == node->movedPiece)
-                //Found piece, check if can move
-                if(isValidMove(board, node->move, NULL, NULL, NULL))
-                    //Found piece
-                    break;
-        }
-    }else{
-        //Neither is known
-        switch(node->movedPiece & 7){
-            case PAWN:
-                node->move.from = findPawnMovableTo(node->move.to, node->movedPiece, board);
-                break;
-            case ROOK:
-                node->move.from = findRookMovableTo(node->move.to, node->movedPiece, board);
-                break;
-            case KNIGHT:
-                node->move.from = findKnightMovableTo(node->move.to, node->movedPiece, board);
-                break;
-            case BISHOP:
-                node->move.from = findBishopMovableTo(node->move.to, node->movedPiece, board);
-                break;
-            case QUEEN:
-                node->move.from = findQueenMovableTo(node->move.to, node->movedPiece, board);
-                break;
-            case KING:
-                if(board->nextIsWhite)
-                    node->move.from = board->whiteKing;
-                else
-                    node->move.from = board->blackKing;
-                break;
-        }
-    }
-
-    return node;
-}
-
-
-Board* loadMoves(const char *path){
-    //Open file
-    FILE *saveFile = fopen(path, "r");
-    if(saveFile == NULL){
-        //Handle TODO
-        return NULL;
-    }
-
-    //Read fen
-    char fen[90]; //Bit extra for the longest possible fen string
-    fgets(fen, 90, saveFile);
-    Board *board = newGameFromStart(NULL, 1);
-
-    //While not empty parse string
-
-    char moveStr[8];
-    while(fgets(moveStr, 8, saveFile) != NULL){
-        //Discard \n
-        moveStr[strlen(moveStr)-1] = '\0';
-        ReplayNode *node = parseMoveStr(moveStr, board);
-        appendPointerToList(&board->replayData, node);
-
-        //Make move
-        movePiece(board, node->move);
-        //If castling aslo move rook
-        if(node->isCastling)
-            movePiece(board, node->rookMove);
-
-        //Update board status
-        board->checkmate = node->isCheckmate;
-        board->nextIsWhite = !board->nextIsWhite;
-
-        printBoard(board);
-    }
-
-    if(board->replayData.length == 0){
-        //File selected was not saved with analysis data: TODO
-    }
-
-    return board;
-}
-
 void undoMove(Board *board, ReplayNode *node){
     //Move piece back
     Move rev = {.from = node->move.to, .to = node->move.from};
     movePiece(board, rev);
     //Put captured piece back
     if(node->isCapture)
-        board->cell[rev.from.rank][rev.from.file] = node->pieceCaptured;
+        *at(board, rev.from) = node->pieceCaptured;
     //If promotion, demote
-    if(node->isPromotion)
-        board->cell[rev.from.rank][rev.from.file] = PAWN | (node->isWhiteMove ? COLOR_WHITE : COLOR_BLACK);
+    if(node->isPromotion){
+        //Demote promoted piece
+        *at(board, rev.to) = PAWN | (node->isWhiteMove ? COLOR_WHITE : COLOR_BLACK);
+    }
     //Move rook back if needed
     if(node->isCastling){
         Move rookMove = {.from = node->rookMove.to, .to = node->rookMove.from};
@@ -524,9 +325,14 @@ void redoMove(Board *board, ReplayNode *node){
     if(node->isCastling){
         movePiece(board, node->rookMove);
     }
+
+    //If promotion, promote
+    if(node->isPromotion)
+        *at(board, node->move.to) = node->promotionChoice;
 }
 
 bool handleAnalysisKeypress(Board *board, SDL_Event ev){
+    ReplayNode *next;
     switch(ev.key.keysym.sym){
         case SDLK_LEFT:
             //Step back
@@ -544,7 +350,6 @@ bool handleAnalysisKeypress(Board *board, SDL_Event ev){
             break;
         case SDLK_RIGHT:
             //Step forward
-            ReplayNode *next;
             if(board->replayData.last == NULL)
                 //Step to first move
                 next = board->replayData.first;

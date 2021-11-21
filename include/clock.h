@@ -1,3 +1,7 @@
+/**
+ * @file clock.h
+ * @brief Sakk óra
+ */
 #ifndef CHESS_CLOCK
 #define CHESS_CLOCK
 
@@ -5,12 +9,15 @@
 
 #include <SDL2/SDL.h>
 
+/**
+ * @brief Óra
+ */
 typedef struct Clock {
-    int secondsRemaining;
-    SDL_Texture *texture;
-    bool whitesClock;
+    int secondsRemaining;   ///< Hátralévő másodpercek
+    SDL_Texture *texture;   ///< Az óra textúrája
+    bool whitesClock;       ///< Fehér órája?
 
-    SDL_Renderer *renderer;
+    SDL_Renderer *renderer; ///< Font rendereléshez használt renderer
 } Clock;
 
 /**

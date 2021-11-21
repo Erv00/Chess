@@ -17,8 +17,8 @@ void movePiece(Board *board, Move move){
             board->blackKing = move.to;
         }
     }
-    board->cell[move.to.rank][move.to.file] = at(board, move.from);
-    board->cell[move.from.rank][move.from.file] = 0;
+    *at(board, move.to) = *at(board, move.from);
+    *at(board, move.from) = 0;
 }
 
 void movePieceWithCheck(Board *board, Move move){
@@ -30,7 +30,7 @@ void movePieceWithCheck(Board *board, Move move){
     }
 
     //Move is valid
-    ReplayNode rNode = {.isWhiteMove = board->nextIsWhite, .move = move, .movedPiece = at(board, move.from), .moveUniqueness = isMoveUnique(board, move)};
+    ReplayNode rNode = {.isWhiteMove = board->nextIsWhite, .move = move, .movedPiece = *at(board, move.from), .moveUniqueness = isMoveUnique(board, move)};
 
     if(isPawnAt(board, move.from) && (move.to.rank == 0 || move.to.rank == 7)){
         //Promote pawn
@@ -38,7 +38,7 @@ void movePieceWithCheck(Board *board, Move move){
         if(!isValidPiece(choice))
             return;
         
-        board->cell[move.from.rank][move.from.file] = choice;
+        *at(board, move.from) = choice;
         rNode.isPromotion = true;
         rNode.promotionChoice = choice;
     }
@@ -46,7 +46,7 @@ void movePieceWithCheck(Board *board, Move move){
     //Set node
     if(!isFreeAt(board, move.to)){
         rNode.isCapture = true;
-        rNode.pieceCaptured = at(board, move.to);
+        rNode.pieceCaptured = *at(board, move.to);
     }
 
     //Check if hitting en passante
@@ -111,7 +111,7 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
     }
 
     bool valid = false;
-    Piece toMove = at(board, move.from) & 7; //&7 to only select piece type, not color
+    Piece toMove = *at(board, move.from) & 7; //&7 to only select piece type, not color
     switch(toMove){
     case PAWN:
         valid = checkPawnMove(board, move, enPassante);
@@ -120,7 +120,7 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
         valid = checkRookMove(board, move, newCastlingAvailability);
         break;
     case KNIGHT:
-        valid = checkKnightMove(board, move);
+        valid = checkKnightMove(move);
         break;
     case BISHOP:
         valid = checkBishopMove(board, move);
@@ -131,7 +131,9 @@ bool isValidMove(Board *board, Move move, Square *enPassante, Move *rookMove, in
     case KING:
         valid = checkKingMove(board, move, rookMove, newCastlingAvailability);
         break;
-    //No need for default, as previous conditions ensure only the above are possible
+    default:
+        //No need for default, as previous conditions ensure only the above are possible, but compiler warnings are treated as errors
+        break;
     }
 
     if(!valid)
@@ -245,7 +247,7 @@ bool checkRookMove(Board *board, Move move, int *newCastlingAvailability){
     return true;
 }
 
-bool checkKnightMove(Board *board, Move move){
+bool checkKnightMove(Move move){
     int rankDiff = abs(move.from.rank - move.to.rank);
     int fileDiff = abs(move.from.file - move.to.file);
     if(rankDiff == 1 && fileDiff == 2)
@@ -360,24 +362,24 @@ Square findPawnMovableTo(Square to, Piece moved, Board *board){
 
     //Normal move
     move.from.rank += dir;
-    if(isValidSquare(move.from) && at(board, move.from) == moved)
+    if(isValidSquare(move.from) && *at(board, move.from) == moved)
         if(isValidMove(board, move, NULL, NULL, NULL))
             return move.from;
     //Capture
     move.from.file += dir;
-    if(isValidSquare(move.from) && at(board, move.from) == moved)
+    if(isValidSquare(move.from) && *at(board, move.from) == moved)
         if(isValidMove(board, move, NULL, NULL, NULL))
             return move.from;
 
     move.from.file -= 2*dir;
-    if(isValidSquare(move.from) && at(board, move.from) == moved)
+    if(isValidSquare(move.from) && *at(board, move.from) == moved)
         if(isValidMove(board, move, NULL, NULL, NULL))
             return move.from;
 
     //2 square move
     move.from.rank += dir;
     move.from.file += dir;
-    if(isValidSquare(move.from) && at(board, move.from) == moved)
+    if(isValidSquare(move.from) && *at(board, move.from) == moved)
         if(isValidMove(board, move, NULL, NULL, NULL))
             return move.from;
 
@@ -392,7 +394,7 @@ Square findRookMovableTo(Square to, Piece moved, Board *board){
     //Check in rank
     for(int file = 0; file < 8; file++){
         move.from.file = file;
-        if(at(board, move.from) == moved)
+        if(*at(board, move.from) == moved)
             if(isValidMove(board, move, NULL, NULL, NULL))
                 return move.from;
     }
@@ -402,7 +404,7 @@ Square findRookMovableTo(Square to, Piece moved, Board *board){
     //Check in file
     for(int rank = 0; rank < 8; rank++){
         move.from.rank = rank;
-        if(at(board, move.from) == moved)
+        if(*at(board, move.from) == moved)
             if(isValidMove(board, move, NULL, NULL, NULL))
                 return move.from;
     }
@@ -421,7 +423,7 @@ Square findKnightMovableTo(Square to, Piece moved, Board *board){
     for(int i=0; i<4; i++){ //There are 4 cases
         move.from.rank += rankDiff;
         move.from.file += fileDiff;
-        if(at(board, move.from) == moved)
+        if(*at(board, move.from) == moved)
             if(isValidMove(board, move, NULL, NULL, NULL))
                 return move.from;
         
@@ -437,7 +439,7 @@ Square findKnightMovableTo(Square to, Piece moved, Board *board){
     for(int i=0; i<4; i++){ //There are 4 cases
         move.from.rank += rankDiff;
         move.from.file += fileDiff;
-        if(at(board, move.from) == moved)
+        if(*at(board, move.from) == moved)
             if(isValidMove(board, move, NULL, NULL, NULL))
                 return move.from;
         
@@ -463,7 +465,7 @@ Square findBishopMovableTo(Square to, Piece moved, Board *board){
             move.from.rank += rankDiff;
             move.from.file += fileDiff;
             if(isValidSquare(move.from))
-                if(at(board, move.from) == moved)
+                if(*at(board, move.from) == moved)
                     if(isValidMove(board, move, NULL, NULL, NULL))
                         return move.from;
         }while(isValidSquare(move.from));

@@ -1,3 +1,7 @@
+/**
+ * @file graphics.h
+ * @brief Grafika
+ */
 #ifndef CHESS_GRAPHICS
 #define CHESS_GRAPHICS
 
@@ -8,26 +12,70 @@
 #include "square.h"
 #include "board.h"
 
-typedef struct GraphicsData{
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-} GraphicsData;
+/**
+ * @brief Inicializálja a grafikával kapcsolatos dolgokat és betölti a textúrákat és a fontokat 
+ * @param win Ide íródik az ablak
+ * @param renderer Ide íródik a renderer
+ */
+void initGraphics(SDL_Window **win, SDL_Renderer **renderer);
 
-//
-GraphicsData initWindow(void);
+/**
+ * @brief Betölti a bábuk textúráit
+ * 
+ * @param renderer A betöltéshez használt renderer
+ */
+void loadPieces(SDL_Renderer *renderer);
 
-bool loadPieces(SDL_Renderer *renderer);
+/**
+ * @brief Felszabadítja a bábuk textúráit
+ */
 void unloadPieces(void);
 
+/**
+ * @brief Visszadja az adott bábu textúráját
+ * 
+ * @param p A bábu aminek a textúrája kell
+ * @return SDL_Texture* A bábu textúrája
+ */
 SDL_Texture *getPieceGraphics(Piece p);
 
-void renderPiece(SDL_Renderer *renderer, Piece p, Square at);
-
+/**
+ * @brief Rendereli a táblát, fordítva ha kell
+ * 
+ * @param renderer A használt renderer
+ * @param flip Igaz, ha meg kell fordítani a táblát
+ */
 void renderBoard(SDL_Renderer *renderer, bool flip);
 
+/**
+ * @brief Rendereli a táblán a bábukat
+ * 
+ * @param renderer A használt renderer
+ * @param board A tábla
+ * @param flip Igaz, ha meg kell fordítani a táblát
+ */
 void renderPieces(SDL_Renderer *renderer, Board *board, bool flip);
 
-//Creates a texture form a string. Stores it's width and height int with and height, any of these may be NULL
+/**
+ * @brief Betölti a fontokat
+ */
+void loadFonts(void);
+
+/**
+ * @brief Felszabadítja a fontokat
+ */
+void unloadFonts(void);
+
+
+/**
+ * @brief Az adott sztringet textúrává alakítja
+ * 
+ * @param renderer Az átalakításhoz használt renderer
+ * @param str Az átalakítandó sztring
+ * @param width Ha nem NULL, ide íródik a textúra szélessége
+ * @param height Ha nem NULL, ide íródik a textúra magassága
+ * @return SDL_Texture* Az elkészített textúra
+ */
 SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height);
 
 /**
@@ -42,11 +90,22 @@ SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width
  */
 SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height, bool white);
 
-//Loads the menu textures
-bool loadMenuTextures(SDL_Renderer *renderer);
+/**
+ * @brief Betölti a menük textúráit
+ * 
+ * @param renderer A betöltéshez használt renderer
+ */
+void loadMenuTextures(SDL_Renderer *renderer);
 
-void unloadTextures(void);
+/**
+ * @brief Felszabadítja a menük textúráit
+ * 
+ */
+void unloadMenuTextures(void);
 
+/**
+ * @brief Menük
+ */
 typedef enum {
     MENU_MAIN,
     MENU_LOAD,
@@ -60,8 +119,18 @@ typedef enum {
     NUM_MENUS
 } Menu;
 
+/**
+ * @brief Meghatározza a megadott menü textúráját
+ * 
+ * @param menu A menü
+ * @return SDL_Texture* A menühöz tartozó textúra
+ */
 SDL_Texture* getMenuTexture(Menu menu);
 
-//Helper function that returnes the textures width and height in an SDL_Rect
+/**
+ * @brief Egy adott textúráró meghatározza a méreteit
+ * @param tex A vizsgálandó textúra
+ * @return SDL_Rect Tartalmazza a textúra szélességét és magasságát
+ */
 SDL_Rect textureDim(SDL_Texture* tex);
 #endif

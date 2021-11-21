@@ -3,6 +3,7 @@
 #include "graphics.h"
 #include "analysis.h"
 #include "buttons.h"
+#include "loading.h"
 
 #include <assert.h>
 
@@ -11,7 +12,6 @@ Uint32 oneSecondTick(Uint32 ms, void *param){
     SDL_Event ev;
     ev.type = SDL_USEREVENT;
     SDL_PushEvent(&ev);
-    printf("CLK %u\n", SDL_GetTicks());
     return ms;
 }
 void renderMenuView(SDL_Renderer *renderer){
@@ -51,7 +51,7 @@ void renderPlayView(Board *board){
     };
     SDL_RenderCopy(board->renderer, board->blackClock.texture, NULL, &blackClkRect);
 }
-void renderSaveView(SDL_Renderer *renderer, Board *board){
+void renderSaveView(SDL_Renderer *renderer){
     //Clear screen
     SDL_SetRenderDrawColor(renderer, 0,0,0,255);
     SDL_RenderClear(renderer);
@@ -271,7 +271,7 @@ void handleLoadView(SDL_Renderer *renderer){
 }
 void handlePlayView(Board *board){
     //Save button
-    SDL_Rect buttons[1] = {{
+    SDL_Rect buttons[] = {{
         .x = 8*45,
         .y = 7*45,
         .w = 4*45,
@@ -301,6 +301,11 @@ void handlePlayView(Board *board){
             }
         }
 
+        int pressed;
+        if(processEvent(buttons, 1, &ev, &pressed))
+            //Pressed save button
+            handleSaveView(board);
+
         //If was dragging but dropped, make move
         if(wasDragAndDrop(&ev, board->mouseState)){
             Move m = {
@@ -326,7 +331,7 @@ void handlePlayView(Board *board){
 }
 void handleSaveView(Board *board){
     //Render menu
-    renderSaveView(board->renderer, board);
+    renderSaveView(board->renderer);
     //Get save path: TODO
     char path[] = "./state.sch";
     //Check if saving step replay & save
@@ -441,8 +446,6 @@ void handleAnalysisView(Board *board){
 
         //Update mouse and render
         updateMouseState(&ev, board, false);
-        SDL_SetRenderDrawColor(board->renderer, 0,0,0,255);
-        SDL_RenderClear(board->renderer);
         renderAnalysisView(board);
         renderPieces(board->renderer, board, false);
         SDL_RenderPresent(board->renderer);

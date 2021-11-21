@@ -40,7 +40,7 @@ Piece getChoice(Board *board){
             return checkKeyboardSelect(color, &e);
         case SDL_MOUSEBUTTONUP:
             //Mouse
-            return checkMouseSelect(color, &e);
+            return checkMouseSelect(color);
         case SDL_USEREVENT:
             //Tick clock
             updateCorrectClock(board);
@@ -53,7 +53,7 @@ Piece getChoice(Board *board){
     }
 }
 
-Piece checkMouseSelect(Piece color, SDL_Event *e){
+Piece checkMouseSelect(Piece color){
     int x,y;
     SDL_GetMouseState(&x, &y);
     if(y < 3.5*45 || y > 4.5*45){
@@ -62,21 +62,21 @@ Piece checkMouseSelect(Piece color, SDL_Event *e){
     }
 
     switch((x-2*45)/45){
-    case 0:
-        //Rook
-        return color | ROOK;
-    case 1:
-        //Knight
-        return color | KNIGHT;
-    case 2:
-        //Bishop
-        return color | BISHOP;
-    case 3:
-        //Queen
-        return color | QUEEN;
-    default:
-        //Cancel
-        return 0;
+        case 0:
+            //Rook
+            return color | ROOK;
+        case 1:
+            //Knight
+            return color | KNIGHT;
+        case 2:
+            //Bishop
+            return color | BISHOP;
+        case 3:
+            //Queen
+            return color | QUEEN;
+        default:
+            //Cancel
+            return 0;
     }
 }
 

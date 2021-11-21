@@ -4,3 +4,4 @@ chess.zip
 .vscode
 *.sch
 tmp
+doc/*/

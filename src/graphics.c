@@ -7,29 +7,45 @@
 #include "debugmalloc.h"
 
 static SDL_Texture *PIECE_GRAPHICS[12] = {NULL};
+//[0] is normal (16) font, [1] is win font (42)
+static TTF_Font *CHESS_FONTS[2] = {NULL};
 
-GraphicsData initWindow(){
-    GraphicsData gp;
-
+void initGraphics(SDL_Window **win, SDL_Renderer **renderer){
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         //Failed to initialize
         fprintf(stderr, "Failed to init sdl: %s\n", SDL_GetError());
         exit(-1);
     }
 
-    assert((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == IMG_INIT_PNG);
+    if(IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG){
+        //Failed to init
+        fprintf(stderr, "Failed to init IMG: %s\n", SDL_GetError());
+        exit(-1);
+    }
 
-    gp.window = SDL_CreateWindow("Schakk", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 45*12, 45*8, SDL_WINDOW_SHOWN);
-    assert(gp.window != NULL);
+    if(SDL_CreateWindowAndRenderer(12*45, 8*45, SDL_WINDOW_SHOWN, win, renderer) != 0){
+        //Failed to create
+        fprintf(stderr, "Failed to create window and renderer: %s\n", SDL_GetError());
+        exit(-1);
+    }
+    
+    if(TTF_Init() != 0){
+        //Failed to init
+        fprintf(stderr, "Failed to init ttf: %s\n", SDL_GetError());
+        exit(-1);
+    }
 
-    gp.renderer = SDL_CreateRenderer(gp.window, -1, SDL_RENDERER_SOFTWARE);
-    assert(gp.renderer != NULL);
+    //Load pieces
+    loadPieces(*renderer);
 
-    TTF_Init();
-    return gp;
+    //Load fonts
+    loadFonts();
+
+    //Load menu textures
+    loadMenuTextures(*renderer);
 }
 
-bool loadPieces(SDL_Renderer *renderer){
+void loadPieces(SDL_Renderer *renderer){
     static char PIECE_ACRONYMS[] = {'p', 'r', 'n', 'b', 'q', 'k'};
     int idx = 0;
     char path[] = "assets/Chess_XXt45.png";
@@ -41,14 +57,14 @@ bool loadPieces(SDL_Renderer *renderer){
 
             SDL_Texture *t = IMG_LoadTexture(renderer, path);
             if(t == NULL){
-                printf("Failed to open %s\n", path);
+                fprintf(stderr, "Failed to open %s\n", path);
+                exit(-1);
             }
             PIECE_GRAPHICS[idx++] = t;
         }
         //Now load blacks
         path[14] = 'd';
     }
-    return true;
 }
 
 void unloadPieces(void){
@@ -109,29 +125,38 @@ void renderPieces(SDL_Renderer *renderer, Board *board, bool flip){
                     .w = 45,
                     .h = 45
                 };
-                SDL_RenderCopy(renderer, getPieceGraphics(at(board, s)), NULL, &mousePos);
+                SDL_RenderCopy(renderer, getPieceGraphics(*at(board, s)), NULL, &mousePos);
             } else if(!isFreeAt(board, s))
-                SDL_RenderCopy(renderer, getPieceGraphics(at(board, s)), NULL, &rect);
+                SDL_RenderCopy(renderer, getPieceGraphics(*at(board, s)), NULL, &rect);
             rect.x += 45;
         }
         rect.y += 45;
     }
 }
 
-SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height){
-    static TTF_Font *font = NULL;
-
-    //Open font if not opened
-    if(font == NULL){
-        font = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 16);
-        if(font == NULL){
+void loadFonts(void){
+        CHESS_FONTS[0] = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 16);
+        if(CHESS_FONTS[0] == NULL){
             fprintf(stderr, "Failed to open font: %s\n", SDL_GetError());
             exit(-1);
         }
-    }
 
+        CHESS_FONTS[1] = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 42);
+        if(CHESS_FONTS[1] == NULL){
+            fprintf(stderr, "Failed to open font: %s\n", SDL_GetError());
+            exit(-1);
+        }
+        TTF_SetFontStyle(CHESS_FONTS[1], TTF_STYLE_BOLD);
+}
+
+void unloadFonts(void){
+    TTF_CloseFont(CHESS_FONTS[0]);
+    TTF_CloseFont(CHESS_FONTS[1]);
+}
+
+SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height){
     SDL_Color col = {255,255,255,255};
-    SDL_Surface *surf = TTF_RenderUTF8_Blended(font, str, col);
+    SDL_Surface *surf = TTF_RenderUTF8_Blended(CHESS_FONTS[0], str, col);
 
     if(width != NULL)
         *width = surf->w;
@@ -145,18 +170,6 @@ SDL_Texture* stringToTexture(SDL_Renderer *renderer, const char *str, int *width
 }
 
 SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *width, int *height, bool white){
-    static TTF_Font *font = NULL;
-
-    //Open font if not opened
-    if(font == NULL){
-        font = TTF_OpenFont("assets/LiberationSerif-Regular.ttf", 42);
-        if(font == NULL){
-            fprintf(stderr, "Failed to open font: %s\n", SDL_GetError());
-            exit(-1);
-        }
-        TTF_SetFontStyle(font, TTF_STYLE_BOLD);
-    }
-
     SDL_Color col = {255,255,255,255};
     if(!white){
         col.r = 0;
@@ -164,7 +177,7 @@ SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *wi
         col.b = 0;
     }
 
-    SDL_Surface *surf = TTF_RenderUTF8_Blended(font, str, col);
+    SDL_Surface *surf = TTF_RenderUTF8_Blended(CHESS_FONTS[1], str, col);
 
     if(width != NULL)
         *width = surf->w;
@@ -180,21 +193,20 @@ SDL_Texture* winStringToTexture(SDL_Renderer *renderer, const char *str, int *wi
 
 static SDL_Texture *menuTextures[NUM_MENUS] = {NULL};
 
-bool loadMenuTextures(SDL_Renderer *renderer){
+void loadMenuTextures(SDL_Renderer *renderer){
     char path[20] = {0};
     for(int i = 0; i < NUM_MENUS; i++){
         sprintf(path, "assets/menu_%d.png", i);
         SDL_Texture *t = IMG_LoadTexture(renderer, path);
         if(t == NULL){
-            printf("Failed to open %s\n", path);
-            //exit(-1);
+            fprintf(stderr, "Failed to open %s\n", path);
+            exit(-1);
         }
         menuTextures[i] = t;
     }
-    return true;
 }
 
-void unloadTextures(void){
+void unloadMenuTextures(void){
     for(int i = 0; i < NUM_MENUS; i++)
         SDL_DestroyTexture(menuTextures[i]);
 }

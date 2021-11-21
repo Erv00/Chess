@@ -1,3 +1,7 @@
+/**
+ * @file board.h
+ * @brief Sakktábla
+ */
 #ifndef CHESS_BOARD
 #define CHESS_BOARD
 
@@ -10,41 +14,41 @@
 #include "analysis.h"
 #include "clock.h"
 
+/**
+ * @brief A hivatalos kezdés FEN sztringje
+ */
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+/**
+ * @brief Egy sakktábla reprezentálása
+ */
 typedef struct Board {
-    char cell[8][8];
-    bool nextIsWhite;
-    char castlingAvailability;
-    Square enPassante;
-    int halfmoveClock;
-    int fullmoveCounter;
-    Square whiteKing;
-    Square blackKing;
-    bool checkmate;
+    Piece cell[8][8];           ///< A 8x8-as tábla
+    bool nextIsWhite;           ///< Igaz, ha a következő lépés fehéré
+    char castlingAvailability;  ///< A sáncolási lehetőségek bitfalagként 8 = fekete Q 4 = fekete K 2 = fehér Q 1 = fehér K
+    Square enPassante;          ///< Az en passante lépéssel ráléphető négyzet
+    int halfmoveClock;          ///< Az eddig megtett félkörök száma az 50 lépéses szabály értelmében
+    int fullmoveCounter;        ///< Az eddig megtett körök száma
+    Square whiteKing;           ///< A fehér király helyzete
+    Square blackKing;           ///< A fekete király helyzete
+    bool checkmate;             ///< Igaz, ha sakkmatt
 
-    Clock whiteClock, blackClock;
+    Clock whiteClock;           ///< Fehér sakkórája
+    Clock blackClock;           ///< Fekete sakkórája
 
-    MouseState mouseState;
-    //Renderer associated with the board, may be null if nut using graphics
-    SDL_Renderer *renderer;
+    MouseState mouseState;      ///< Az egér állapota
+
+    SDL_Renderer *renderer;     ///< A táblához kapcsolt renderer
 
     //False if loaded without moves
-    bool hasReplayData;
-    ReplayList replayData;
+    bool hasReplayData;         ///< Igaz, ha tudjuk hogyan jutott a játék ebbe az állásba
+    ReplayList replayData;      ///< Láncolt lista, hogy hogyan jutottunk el az eddigi játékállásig
 
-    bool quit;
-    bool gameOver;
-    bool draw;
-    bool whiteWon;
+    bool quit;                  ///< Igaz, ha ki szeretnénk lépni
+    bool gameOver;              ///< Igaz, ha a játéknak vége
+    bool draw;                  ///< Igaz, ha döntetlen a játék
+    bool whiteWon;              ///< Igaz, ha fehér nyert
 } Board;
-
-//Loads a game state from a FEN string, and returnes the game
-Board* newGameFromFen(const char* fenStr, SDL_Renderer *renderer);
-
-//Saves the castling string in cast, does NOT append \0
-//Returnes the length of the string
-int getCastlingString(Board *board, char cast[4]);
 
 /**
  * @brief Új játékot kezd az alapállásból
@@ -58,12 +62,18 @@ Board* newGameFromStart(SDL_Renderer *renderer, int time);
 //Prints the board
 void printBoard(Board *board);
 
-//Returnes the game's FEN string
-char *saveAsFEN(Board *board);
-
-//Check the board's status: Check[mate], fifty-move rule
+/**
+ * @brief Ellenőrzi, és frissíti a tábla állapotát (50 lépés, sakk(matt) 
+ * @param board Az ellenőrizendő tábla
+ */
 void checkBoardStatus(Board *board);
 
+/**
+ * @brief Elmenti a táblát FEN notációban
+ * 
+ * @param path 
+ * @param board 
+ */
 void saveWithoutMoves(const char *path, Board *board);
 
 /**
@@ -91,26 +101,93 @@ void destroyBoard(Board *board);
  */
 bool updateCorrectClock(Board *board);
 
-Piece at(Board *board, Square square);
+/**
+ * @brief Visszad egy mutatót a megadott mezőn lévő bábura
+ * 
+ * @param board A tábla
+ * @param square A megadott mező
+ * @return Piece* A bábura mutató pointer
+ */
+Piece* at(Board *board, Square square);
 
-//Returnes true if the specified cell is free
+/**
+ * @brief Meghatározza, hogy az adott mező szabad-e
+ * 
+ * @param board A használt tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mező szabad
+ * @return false Ha a mező nem szabad
+ */
 bool isFreeAt(Board *board, Square square);
 
-
-bool isBlackAt(Board *board, Square square);
+/**
+ * @brief Meghatározza, hogy az adott mezőn fehér áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn fehár áll
+ * @return false Ellenkező esetben
+ */
 bool isWhiteAt(Board *board, Square square);
-bool isPawnAt(Board *board, Square square);
-bool isRookAt(Board *board, Square square);
-bool isKnightAt(Board *board, Square square);
-bool isBishopAt(Board *board, Square square);
-bool isQueenAt(Board *board, Square square);
-bool isKingAt(Board *board, Square square);
-bool isValidPieceAt(Board *board, Square square);
-//Returnes true if there is an opponent piece at square
-bool isOpponentAt(Board *board, Square square);
-//Returnes true if the piece is the opponents
-bool isOpponent(Board *board, Piece piece);
 
-bool isSameColorAt(Board *board, Square s1, Square s2);
+/**
+ * @brief Meghatározza, hogy az adott mezőn gyalog áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn gyalog áll
+ * @return false Ellenkező esetben
+ */
+bool isPawnAt(Board *board, Square square);
+
+/**
+ * @brief Meghatározza, hogy az adott mezőn huszár áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn huszár áll
+ * @return false Ellenkező esetben
+ */
+bool isKnightAt(Board *board, Square square);
+
+/**
+ * @brief Meghatározza, hogy az adott mezőn király áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn király áll
+ * @return false Ellenkező esetben
+ */
+bool isKingAt(Board *board, Square square);
+
+/**
+ * @brief Meghatározza, hogy az adott mezőn áll-e bábu
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn áll bábu
+ * @return false Ellenkező esetben
+ */
+bool isValidPieceAt(Board *board, Square square);
+
+/**
+ * @brief Meghatározza, hogy az adott mezőn ellenfél áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn ellenfél áll
+ * @return false Ellenkező esetben
+ */
+bool isOpponentAt(Board *board, Square square);
+
+/**
+ * @brief Meghatározza, hogy az adott bábu ellenfél-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param piece Az ellenőrizendő bábu
+ * @return true Ha a bábu ellenfél
+ * @return false Ellenkező esetben
+ */
+bool isOpponent(Board *board, Piece piece);
 
 #endif

@@ -34,20 +34,8 @@ bool isPawn(Piece p){
     return (p & 7) == PAWN;
 }
 
-bool isRook(Piece p){
-    return (p & 7) == ROOK;
-}
-
 bool isKnight(Piece p){
     return (p & 7) == KNIGHT;
-}
-
-bool isBishop(Piece p){
-    return (p & 7) == BISHOP;
-}
-
-bool isQueen(Piece p){
-    return (p & 7) == QUEEN;
 }
 
 bool isKing(Piece p){
@@ -56,10 +44,6 @@ bool isKing(Piece p){
 
 bool isValidPiece(Piece p){
     return p & (COLOR_BLACK | COLOR_WHITE);
-}
-
-bool isSameColor(Piece p1, Piece p2){
-    return (p1 & (COLOR_WHITE + COLOR_BLACK)) == (p2 & (COLOR_WHITE + COLOR_BLACK));
 }
 
 const char* getPieceFace(Piece p){
