@@ -23,12 +23,21 @@ enum MoveUniqueness {
 };
 
 /**
+ * @brief Egy sáncolás leírása
+ */
+typedef struct CastlingData{
+    bool isKingside;                ///< Igaz, ha a sáncolás rövid (király oldali)
+    Move rookMove;                  ///< Ha sáncolás, ez a lépés mozdítja a bástyát
+    char newCastlingAvailability;   ///< A lépés utáni sáncolási lehetőségek
+    char oldCastlingAvailability;   ///< A lépés előtti sáncolási lehetőségek
+} CastlingData;
+
+/**
  * @brief Egy lépés részletes leírása
  */
 struct ReplayNode{
     bool isWhiteMove;           ///< Igaz, ha a lépést fehér tette meg
     bool isCastling;            ///< Igaz, ha a lépés sáncolás
-    bool castlingIsKingSide;    ///< Igaz, ha a sáncolás rövid (király oldali)
     bool isCapture;             ///< Igaz, ha a lépés leüt egy bábut
     bool isCheck;               ///< Igaz, ha a lépés sakkot okoz
     bool isCheckmate;           ///< Igaz, ha a lépés sakkmattot ad
@@ -41,7 +50,7 @@ struct ReplayNode{
     Piece pieceCaptured;        ///< A leütött bábu, ha volt
     Piece promotionChoice;      ///< Ha átváltozás volt, ezzé a bábuvá változott
 
-    Move rookMove;              ///< Ha sáncolás, ez a lépés mozdítja a bástyát
+    CastlingData castlingData;  ///< A sáncolást leíró adatok
 
     SDL_Texture *texture;       ///< A lépés textúrája
 

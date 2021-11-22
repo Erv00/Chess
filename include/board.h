@@ -141,6 +141,16 @@ bool isWhiteAt(Board *board, Square square);
 bool isPawnAt(Board *board, Square square);
 
 /**
+ * @brief Meghatározza, hogy az adott mezőn bástya áll-e
+ * 
+ * @param board Az ellenőrizendő tábla
+ * @param square Az ellenőrizendő mező
+ * @return true Ha a mezőn bástya áll
+ * @return false Ellenkező esetben
+ */
+bool isRookAt(Board *board, Square square);
+
+/**
  * @brief Meghatározza, hogy az adott mezőn huszár áll-e
  * 
  * @param board Az ellenőrizendő tábla

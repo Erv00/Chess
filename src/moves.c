@@ -74,15 +74,20 @@ void movePieceWithCheck(Board *board, Move move){
     if(!board->nextIsWhite)
         board->fullmoveCounter++;
 
-    if(newCastlingAvailability != -1)
+    if(newCastlingAvailability != -1){
+        //Castling availability changed
+        rNode.castlingData.oldCastlingAvailability = board->castlingAvailability;
+        rNode.castlingData.newCastlingAvailability = newCastlingAvailability;
+
         board->castlingAvailability = newCastlingAvailability;
+    }
 
     //Castling
     if(rookMove.from.rank != -1){
         movePiece(board, rookMove);
         rNode.isCastling = true;
         if(rookMove.from.file == 7)
-            rNode.castlingIsKingSide = true;
+            rNode.castlingData.isKingside = true;
     }
     movePiece(board, move);
 
@@ -339,6 +344,39 @@ bool checkKingMove(Board *board, Move move, Move *castling, int *newCastlingAvai
     }
 
     return isValid;
+}
+
+char getCastlingAvailabilityAfterMove(Board *board, Move move){
+    if(isKingAt(board, move.from)){
+        //King moves, no more castling
+        char mask = 3;
+        if(isWhiteAt(board, move.from))
+            mask = mask << 2;
+        
+        return board->castlingAvailability & mask;
+    }else if(isRookAt(board, move.from)){
+        //If not moving from starting position, ignore
+        //Rank check
+        if(move.from.rank != 0 && move.from.rank != 7)
+            return board->castlingAvailability;
+        
+        //File check
+        if(move.from.file != 0 && move.from.file != 7)
+            return board->castlingAvailability;
+        
+        //Remove just the rook's castling
+        char mask = 1;
+        if(!isWhiteAt(board, move.from))
+            mask = mask << 2;
+
+        if(move.from.file == 0)
+            //Long castling
+            mask = mask << 1;
+
+        return board->castlingAvailability & ~mask;
+    }
+
+    return board->castlingAvailability;
 }
 
 bool canCastle(Board *board, bool white, bool kingside){

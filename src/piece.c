@@ -34,6 +34,10 @@ bool isPawn(Piece p){
     return (p & 7) == PAWN;
 }
 
+bool isRook(Piece p){
+    return (p & 7) == ROOK;
+}
+
 bool isKnight(Piece p){
     return (p & 7) == KNIGHT;
 }

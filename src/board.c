@@ -149,6 +149,10 @@ bool isPawnAt(Board *board, Square square){
     return isPawn(*at(board, square));
 }
 
+bool isRookAt(Board *board, Square square){
+    return isRook(*(at(board, square)));
+}
+
 bool isKnightAt(Board *board, Square square){
     return isKnight(*at(board, square));
 }

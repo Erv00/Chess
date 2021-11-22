@@ -52,6 +52,15 @@ bool isWhite(Piece p);
 bool isPawn(Piece p);
 
 /**
+ * @brief Megadja, hogy az adott bábu bástya-e
+ * 
+ * @param p Az ellenőrizendő bábu
+ * @return true Ha, a bábu bástya
+ * @return false Egyébként
+ */
+bool isRook(Piece p);
+
+/**
  * @brief Megadja, hogy az adott bábu huszár-e
  * 
  * @param p Az ellenőrizendő bábu

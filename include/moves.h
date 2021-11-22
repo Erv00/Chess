@@ -112,6 +112,16 @@ bool checkQueenMove(Board *board, Move move);
 bool checkKingMove(Board *board, Move move, Move *castlingMove, int *newCastlingAvailability);
 
 /**
+ * @brief Meghatározza a sáncolási lehetőségeket a megadott lépés után
+ * 
+ * @param board A vizsgálandó tábla
+ * @param move A vizsgálandó lépés
+ * @return char A sáncolási lehetőségek bitflagként
+ * @see Board
+ */
+char getCastlingAvailabilityAfterMove(Board *board, Move move);
+
+/**
  * @brief Meghatározza, hogy az adott szín az adott oldalon tud-e sáncolni
  * 
  * @param board A tábla amin ellenőrzünk

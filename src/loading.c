@@ -135,34 +135,36 @@ ReplayNode* parseMoveStr(const char *moveStr, Board *board){
 
 void processCastlingStr(const char *moveStr, ReplayNode* node, Board *board){
     node->isCastling = true;
+
     if(board->nextIsWhite){
         node->move.from = board->whiteKing;
         node->move.to = board->whiteKing;
         node->movedPiece = COLOR_WHITE | KING;
 
-        node->rookMove.from = board->whiteKing;
-        node->rookMove.to = board->whiteKing;
+        node->castlingData.rookMove.from = board->whiteKing;
+        node->castlingData.rookMove.to = board->whiteKing;
     }else{
         node->move.from = board->blackKing;
         node->move.to = board->blackKing;
         node->movedPiece = COLOR_BLACK | KING;
 
-        node->rookMove.from = board->blackKing;
-        node->rookMove.to = board->blackKing;
+        node->castlingData.rookMove.from = board->blackKing;
+        node->castlingData.rookMove.to = board->blackKing;
     }
+
     if(strcmp(moveStr, "0-0") == 0){
         //Castling kingside
-        node->castlingIsKingSide = true;
+        node->castlingData.isKingside = true;
         node->move.to.file += 2;
 
-        node->rookMove.from.file = 7;
-        node->rookMove.to.file += 1;
+        node->castlingData.rookMove.from.file = 7;
+        node->castlingData.rookMove.to.file += 1;
     }else{
         //Castling queenside
         node->move.to.file -= 2;
         
-        node->rookMove.from.file = 0;
-        node->rookMove.to.file -= 1;
+        node->castlingData.rookMove.from.file = 0;
+        node->castlingData.rookMove.to.file -= 1;
     }
 }
 
@@ -188,11 +190,16 @@ Board* loadMoves(const char *path){
         ReplayNode *node = parseMoveStr(moveStr, board);
         appendPointerToList(&board->replayData, node);
 
+        //Check castling changes
+        node->castlingData.oldCastlingAvailability = board->castlingAvailability;
+        board->castlingAvailability = getCastlingAvailabilityAfterMove(board, node->move);
+        node->castlingData.newCastlingAvailability = board->castlingAvailability;
+
         //Make move
         movePiece(board, node->move);
         //If castling also move rook
         if(node->isCastling)
-            movePiece(board, node->rookMove);
+            movePiece(board, node->castlingData.rookMove);
         
         //If promotion, promote
         if(node->isPromotion)

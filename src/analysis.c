@@ -154,7 +154,7 @@ void nodeToString(ReplayNode *node, char *out){
         //Castling
         memcpy(out, "0-0", 3);
         out += 3;
-        if(!node->castlingIsKingSide){
+        if(!node->castlingData.isKingside){
             memcpy(out, "-0", 2);
             out += 2;
         }
@@ -316,16 +316,20 @@ void undoMove(Board *board, ReplayNode *node){
     }
     //Move rook back if needed
     if(node->isCastling){
-        Move rookMove = {.from = node->rookMove.to, .to = node->rookMove.from};
+        Move rookMove = {.from = node->castlingData.rookMove.to, .to = node->castlingData.rookMove.from};
         movePiece(board, rookMove);
     }
+    //Undo castling availability
+    board->castlingAvailability = node->castlingData.oldCastlingAvailability;
 }
 
 void redoMove(Board *board, ReplayNode *node){
     movePiece(board, node->move);
     if(node->isCastling){
-        movePiece(board, node->rookMove);
+        movePiece(board, node->castlingData.rookMove);
     }
+    //Restore castling availability
+    board->castlingAvailability = node->castlingData.newCastlingAvailability;
 
     //If promotion, promote
     if(node->isPromotion)
