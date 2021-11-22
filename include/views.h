@@ -10,6 +10,11 @@
 #include "board.h"
 
 /**
+ * @brief A mentési fájl helye
+ */
+#define SAVE_PATH "state.sch"
+
+/**
  * @brief Kirajzolja a főmenüt
  * 
  * @param renderer A használt renderer

@@ -75,21 +75,27 @@ void checkBoardStatus(Board *board){
         node->isCheck = true;
         if(isCheckmate(board)){
             board->checkmate = true;
+            board->gameOver = true;
+            board->whiteWon = !board->nextIsWhite;
+
             node->isCheckmate = true;
         }
     }
 
     //50 move rule
     if(board->halfmoveClock >= 100){
+        board->gameOver = true;
+        board->draw = true;
         printf("DRAW\n");
     }
 }
 
 void saveWithoutMoves(const char *path, Board *board){
     FILE *saveFile = fopen(path, "w");
-    if(saveFile == NULL)
-        //HANDLE: TODO
-        return;
+    if(saveFile == NULL){
+        fprintf(stderr,"Failed to open savefile %s. Aborting\n", path);
+        exit(-1);
+    }
 
     //Save position
     char *fen = saveAsFEN(board);
@@ -102,7 +108,8 @@ void saveWithoutMoves(const char *path, Board *board){
 Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer){
     FILE *saveFile = fopen(path, "r");
     if(saveFile == NULL){
-        //TODO: Handle
+        fprintf(stderr, "Failed to open savefile %s. Aborting\n", path);
+        exit(-1);
         abort();
     }
 

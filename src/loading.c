@@ -170,8 +170,8 @@ Board* loadMoves(const char *path){
     //Open file
     FILE *saveFile = fopen(path, "r");
     if(saveFile == NULL){
-        //Handle TODO
-        return NULL;
+        fprintf(stderr, "Failed to open savefile %s. Aborting\n", path);
+        exit(-1);
     }
 
     //Read fen
@@ -206,7 +206,7 @@ Board* loadMoves(const char *path){
     }
 
     if(board->replayData.length == 0){
-        //File selected was not saved with analysis data: TODO
+        fprintf(stderr, "The savefile %s was not saved with analysis data. Ignoring\n", path);
     }
 
     return board;

@@ -274,9 +274,10 @@ void renderReplay(ReplayList list, SDL_Renderer *renderer){
 
 void saveWithMoves(const char *path, Board *board){
     FILE *saveFile = fopen(path, "w");
-    if(saveFile == NULL)
-        //HANDLE: TODO
-        return;
+    if(saveFile == NULL){
+        fprintf(stderr, "Failed to open savefile %s. Aborting\n", path);
+        exit(-1);
+    }
 
     //Save position
     char *fen = saveAsFEN(board);

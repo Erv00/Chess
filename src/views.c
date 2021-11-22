@@ -63,7 +63,6 @@ void renderSaveView(SDL_Renderer *renderer){
     r.y = (45*8-r.h)/2;
     SDL_RenderCopy(renderer, t, NULL, &r);
     
-    //Save path input: TODO
     SDL_RenderPresent(renderer);
 }
 void renderGameOverView(Board *board){
@@ -247,20 +246,17 @@ void handleLoadView(SDL_Renderer *renderer){
         }
     };
 
-    //TODO: Add interface to specify path
-    char *path = "state.sch";
-
     renderLoadView(renderer);
     SDL_RenderPresent(renderer);
     Board *board = NULL;
     switch(waitForButtonPress(buttons, 3)){
         case 0: //Continue
-            board = loadWithoutMoves(path, renderer);
+            board = loadWithoutMoves(SAVE_PATH, renderer);
             board->renderer = renderer;
             handlePlayView(board);
             break;
         case 1: //Analysis
-            board = loadMoves(path);
+            board = loadMoves(SAVE_PATH);
             board->renderer = renderer;
             handleAnalysisView(board);
             break;
@@ -332,8 +328,6 @@ void handlePlayView(Board *board){
 void handleSaveView(Board *board){
     //Render menu
     renderSaveView(board->renderer);
-    //Get save path: TODO
-    char path[] = "./state.sch";
     //Check if saving step replay & save
     //Button positions
     Button cancel = {
@@ -364,11 +358,11 @@ void handleSaveView(Board *board){
             return;
         case 1:
             //Save with path
-            saveWithMoves(path, board);
+            saveWithMoves(SAVE_PATH, board);
             break;
         case 2:
             //Normal save
-            saveWithoutMoves(path, board);
+            saveWithoutMoves(SAVE_PATH, board);
             break;
     }
 }
