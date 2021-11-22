@@ -9,6 +9,8 @@
 
 #include <SDL2/SDL.h>
 
+typedef struct Board Board;
+
 /**
  * @brief Óra
  */
@@ -45,5 +47,11 @@ void updateClockTexture(Clock *clock);
  * @return false Egyébként
  */
 bool clockTick(Clock *clk);
+
+/**
+ * @brief Kirajzolja az órákat
+ * @param board A tábla, aminek az óráit ki kell rajzolni
+ */
+void renderClocks(Board *board);
 
 #endif

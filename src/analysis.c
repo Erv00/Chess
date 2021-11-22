@@ -62,8 +62,12 @@ void deleteList(ReplayList *list){
 }
 
 void freeListAfter(ReplayList *list,ReplayNode *node){
-    if(node == NULL)
+    if(node == NULL){
+        //Stepped back until start, free from beginning
+        deleteList(list);
         return;
+    }
+        
     ReplayNode *head = node->next;
     while(head != NULL){
         ReplayNode *next = head->next;
@@ -279,9 +283,9 @@ void saveWithMoves(const char *path, Board *board){
         exit(-1);
     }
 
-    //Save position
+    //Save position & original time
     char *fen = saveAsFEN(board);
-    fprintf(saveFile, "%s\n", fen);
+    fprintf(saveFile, "%s\n%d\n", fen, board->originalTime);
     free(fen);
 
     //If no moves have been made, skip
@@ -292,7 +296,7 @@ void saveWithMoves(const char *path, Board *board){
         ReplayNode *node = board->replayData.first;
         while(node != NULL){
             nodeToString(node, nodeStr);
-            fprintf(saveFile, "%s\n", nodeStr);
+            fprintf(saveFile, "%d %s\n", node->timeLeft, nodeStr);
             
             node = node->next;
         }
@@ -321,6 +325,20 @@ void undoMove(Board *board, ReplayNode *node){
     }
     //Undo castling availability
     board->castlingAvailability = node->castlingData.oldCastlingAvailability;
+
+    //Set clock and update clock texture
+    int timeLeft = board->originalTime;
+    ReplayNode *timer = board->replayData.last->previous;
+    if(timer != NULL && timer->previous != NULL)
+        timeLeft = timer->previous->timeLeft;
+
+    if(board->replayData.last->isWhiteMove){
+        board->whiteClock.secondsRemaining = timeLeft;
+        updateClockTexture(&board->whiteClock);
+    }else{
+        board->blackClock.secondsRemaining = timeLeft;
+        updateClockTexture(&board->blackClock);
+    }
 }
 
 void redoMove(Board *board, ReplayNode *node){
@@ -334,6 +352,15 @@ void redoMove(Board *board, ReplayNode *node){
     //If promotion, promote
     if(node->isPromotion)
         *at(board, node->move.to) = node->promotionChoice;
+
+    //Set clock and update clock texture
+    if(node->isWhiteMove){
+        board->whiteClock.secondsRemaining = node->timeLeft;
+        updateClockTexture(&board->whiteClock);
+    }else{
+        board->blackClock.secondsRemaining = node->timeLeft;
+        updateClockTexture(&board->blackClock);
+    }
 }
 
 bool handleAnalysisKeypress(Board *board, SDL_Event ev){

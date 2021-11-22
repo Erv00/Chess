@@ -35,21 +35,7 @@ void renderPlayView(Board *board){
         renderReplay(board->replayData, board->renderer);
 
     //Render clock
-    //White
-    SDL_Rect whiteClkRect = {
-        .x = 8*45,
-        .y = 6*45,
-        .w = 2*45,
-        .h = 45
-    };
-    SDL_RenderCopy(board->renderer, board->whiteClock.texture, NULL, &whiteClkRect);
-    SDL_Rect blackClkRect = {
-        .x = 10*45,
-        .y = 6*45,
-        .w = 2*45,
-        .h = 45
-    };
-    SDL_RenderCopy(board->renderer, board->blackClock.texture, NULL, &blackClkRect);
+    renderClocks(board);
 }
 void renderSaveView(SDL_Renderer *renderer){
     //Clear screen
@@ -117,7 +103,9 @@ void renderGameOverView(Board *board){
 }
 void renderAnalysisView(Board *board){
     renderBoard(board->renderer, false);
+    renderPieces(board->renderer, board, false);
     renderReplay(board->replayData, board->renderer);
+    renderClocks(board);
 }
 
 
@@ -256,7 +244,7 @@ void handleLoadView(SDL_Renderer *renderer){
             handlePlayView(board);
             break;
         case 1: //Analysis
-            board = loadMoves(SAVE_PATH);
+            board = loadMoves(SAVE_PATH, renderer);
             board->renderer = renderer;
             handleAnalysisView(board);
             break;
@@ -400,7 +388,6 @@ void handleGameOverView(Board *board){
 void handleAnalysisView(Board *board){
     //Render view
     renderAnalysisView(board);
-    renderPieces(board->renderer, board, false);
     SDL_RenderPresent(board->renderer);
 
     //Handle events
@@ -441,7 +428,6 @@ void handleAnalysisView(Board *board){
         //Update mouse and render
         updateMouseState(&ev, board, false);
         renderAnalysisView(board);
-        renderPieces(board->renderer, board, false);
         SDL_RenderPresent(board->renderer);
     }
 }

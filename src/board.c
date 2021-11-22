@@ -17,6 +17,7 @@ Board* newGameFromStart(SDL_Renderer *renderer, int time){
     board->hasReplayData = true;
     board->whiteClock = newClock(time, renderer, true);
     board->blackClock = newClock(time, renderer, false);
+    board->originalTime = time;
     return board;
 }
 
@@ -99,7 +100,8 @@ void saveWithoutMoves(const char *path, Board *board){
 
     //Save position
     char *fen = saveAsFEN(board);
-    fprintf(saveFile, "%s\n", fen);
+    //Save original time
+    fprintf(saveFile, "%s\n%d\n", fen, board->originalTime);
     free(fen);
     //Close file
     fclose(saveFile);
@@ -116,6 +118,11 @@ Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer){
     char fen[90]; //Bit extra for the longest possible fen string
     fgets(fen, 90, saveFile);
     Board *board = newGameFromFen(fen, renderer);
+
+    //Get time
+    fscanf(saveFile, "%d", &board->originalTime);
+    board->whiteClock.secondsRemaining = board->originalTime;
+    board->blackClock.secondsRemaining = board->originalTime;
 
     fclose(saveFile);
 

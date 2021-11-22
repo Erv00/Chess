@@ -168,7 +168,7 @@ void processCastlingStr(const char *moveStr, ReplayNode* node, Board *board){
     }
 }
 
-Board* loadMoves(const char *path){
+Board* loadMoves(const char *path, SDL_Renderer *renderer){
     //Open file
     FILE *saveFile = fopen(path, "r");
     if(saveFile == NULL){
@@ -179,15 +179,19 @@ Board* loadMoves(const char *path){
     //Read fen
     char fen[90]; //Bit extra for the longest possible fen string
     fgets(fen, 90, saveFile);
-    Board *board = newGameFromStart(NULL, 1);
+    //Get original time
+    int origTime;
+    fscanf(saveFile, "%d", &origTime);
+    Board *board = newGameFromStart(renderer, origTime);
 
     //While not empty parse string
 
+    int timeLeft;
     char moveStr[8];
-    while(fgets(moveStr, 8, saveFile) != NULL){
+    while(fscanf(saveFile, "%d %s", &timeLeft, moveStr) != EOF){
         //Discard \n
-        moveStr[strlen(moveStr)-1] = '\0';
         ReplayNode *node = parseMoveStr(moveStr, board);
+        node->timeLeft = timeLeft;
         appendPointerToList(&board->replayData, node);
 
         //Check castling changes
@@ -214,6 +218,25 @@ Board* loadMoves(const char *path){
 
     if(board->replayData.length == 0){
         fprintf(stderr, "The savefile %s was not saved with analysis data. Ignoring\n", path);
+    }else{
+        ReplayNode *last = board->replayData.last;
+        if(last->isWhiteMove)
+            board->whiteClock.secondsRemaining = last->timeLeft;
+        else
+            board->blackClock.secondsRemaining = last->timeLeft;
+        
+        last = last->previous;
+        if(last != NULL){
+            if(last->isWhiteMove)
+                board->whiteClock.secondsRemaining = last->timeLeft;
+            else
+                board->blackClock.secondsRemaining = last->timeLeft;
+        }
+        
+        //Update clock textures
+        updateClockTexture(&board->whiteClock);
+        updateClockTexture(&board->blackClock);
+
     }
 
     return board;

@@ -52,6 +52,8 @@ struct ReplayNode{
 
     CastlingData castlingData;  ///< A sáncolást leíró adatok
 
+    int timeLeft;               ///< A lépő hátralévő ideje
+
     SDL_Texture *texture;       ///< A lépés textúrája
 
     //Linked list

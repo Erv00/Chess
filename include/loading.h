@@ -30,8 +30,9 @@ void processCastlingStr(const char *moveStr, ReplayNode* node, Board *board);
  * @brief Betölt egy játékmenetet analízishez
  * 
  * @param path A mentett fájl elérési útja
+ * @param renderer Az új tábla renderere
  * @return Board* A játék
  */
-Board* loadMoves(const char *path);
+Board* loadMoves(const char *path, SDL_Renderer *renderer);
 
 #endif

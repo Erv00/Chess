@@ -32,6 +32,7 @@ typedef struct Board {
     Square whiteKing;           ///< A fehér király helyzete
     Square blackKing;           ///< A fekete király helyzete
     bool checkmate;             ///< Igaz, ha sakkmatt
+    int originalTime;           ///< A sakkórák kezdeti értéke
 
     Clock whiteClock;           ///< Fehér sakkórája
     Clock blackClock;           ///< Fekete sakkórája

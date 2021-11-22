@@ -31,6 +31,10 @@ void movePieceWithCheck(Board *board, Move move){
 
     //Move is valid
     ReplayNode rNode = {.isWhiteMove = board->nextIsWhite, .move = move, .movedPiece = *at(board, move.from), .moveUniqueness = isMoveUnique(board, move)};
+    if(board->nextIsWhite)
+        rNode.timeLeft = board->whiteClock.secondsRemaining;
+    else
+        rNode.timeLeft = board->blackClock.secondsRemaining;
 
     if(isPawnAt(board, move.from) && (move.to.rank == 0 || move.to.rank == 7)){
         //Promote pawn
