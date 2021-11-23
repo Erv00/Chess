@@ -30,12 +30,13 @@ Piece getChoice(Board *board){
     //Draw picker
     drawPicker(board);
     SDL_Event e;
-    while(true){
+    bool timeUp = false;
+    while(!timeUp && !board->quit){
         SDL_WaitEvent(&e);
 
         //Checks if event is a choice
         switch(e.type){
-        case SDL_KEYDOWN:
+        case SDL_KEYUP:
             //Key event
             return checkKeyboardSelect(color, &e);
         case SDL_MOUSEBUTTONUP:
@@ -43,14 +44,17 @@ Piece getChoice(Board *board){
             return checkMouseSelect(color);
         case SDL_USEREVENT:
             //Tick clock
-            updateCorrectClock(board);
-            //TODO: Game over if clock runs out
+            timeUp = updateCorrectClock(board);
             break;
         case SDL_QUIT:
-            //TODO: HANDLE
+            //Quit
+            board->quit = true;
             break;
         }
     }
+
+    //Return invalid piece on error
+    return 0;
 }
 
 Piece checkMouseSelect(Piece color){

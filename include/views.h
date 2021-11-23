@@ -68,22 +68,28 @@ void renderAnalysisView(Board *board);
  * @brief Kezeli a főmenü eseményeit
  * 
  * @param renderer A használt renderer
+ * @return true Ha a felhasználó ki szeretne lépni
+ * @return false Egyébként
  */
-void handleMenuView(SDL_Renderer *renderer);
+bool handleMenuView(SDL_Renderer *renderer);
 
 /**
  * @brief Kezeli az új játék menü eseményeit
  * 
  * @param renderer A használt renderer
+ * @return true Ha a felhasználó ki szeretne lépni
+ * @return false Egyébként
  */
-void handleNewGameView(SDL_Renderer *renderer);
+bool handleNewGameView(SDL_Renderer *renderer);
 
 /**
  * @brief Kezeli a betöltés menü eseményeit
  * 
  * @param renderer A használt renderer
+ * @return true Ha a felhasználó ki szeretne lépni
+ * @return false Egyébként
  */
-void handleLoadView(SDL_Renderer *renderer);
+bool handleLoadView(SDL_Renderer *renderer);
 
 /**
  * @brief Kezeli a játék nézet eseményeit

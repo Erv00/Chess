@@ -109,7 +109,7 @@ void renderAnalysisView(Board *board){
 }
 
 
-void handleMenuView(SDL_Renderer *renderer){
+bool handleMenuView(SDL_Renderer *renderer){
     Button buttons[] = {
         //New game
         {
@@ -140,16 +140,15 @@ void handleMenuView(SDL_Renderer *renderer){
     SDL_RenderPresent(renderer);
     switch(waitForButtonPress(buttons, 3)){
         case 0: //New game
-            handleNewGameView(renderer);
-            break;
+            return handleNewGameView(renderer);
         case 1: //Load
-            handleLoadView(renderer);
-            break;
-        //Default: quit
+            return handleLoadView(renderer);
+        default: //Quit
+            return true;
     }
 
 }
-void handleNewGameView(SDL_Renderer *renderer){
+bool handleNewGameView(SDL_Renderer *renderer){
     Button buttons[] = {
         //15 min
         {
@@ -196,18 +195,23 @@ void handleNewGameView(SDL_Renderer *renderer){
     SDL_RenderPresent(renderer);
 
     int pressed = waitForButtonPress(buttons, 5);
-    if(pressed == -1 || pressed == 4)
+    if(pressed == -1)
+        //User wants to quit
+        return true;
+    if(pressed == 4)
         //Cancel
-        return;
+        return false;
     
     int time = 15*60 + pressed*5*60;
 
     //Start game
     Board *board = newGameFromStart(renderer, time);
     handlePlayView(board);
+    bool quit = board->quit;
     destroyBoard(board);
+    return quit;
 }
-void handleLoadView(SDL_Renderer *renderer){
+bool handleLoadView(SDL_Renderer *renderer){
     Button buttons[] = {
         //Continue
         {
@@ -248,10 +252,16 @@ void handleLoadView(SDL_Renderer *renderer){
             board->renderer = renderer;
             handleAnalysisView(board);
             break;
+        case -1: //Quit
+            return true;
         //default: cancel
     }
-    if(board != NULL)
+    bool quit = false;
+    if(board != NULL){
         destroyBoard(board);
+        quit = board->quit;
+    }
+    return quit;
 }
 void handlePlayView(Board *board){
     //Save button
@@ -274,6 +284,9 @@ void handlePlayView(Board *board){
             if(ev.key.keysym.sym == SDLK_q){
                 quit = true;
             }
+        }else if(ev.type == SDL_QUIT){
+            //User requested quit
+            board->quit = true;
         }
 
         if(ev.type == SDL_USEREVENT){
@@ -341,6 +354,9 @@ void handleSaveView(Board *board){
 
     switch(waitForButtonPress(buttons, 3)){
         case -1:
+            //Quit
+            board->quit = true;
+            return;
         case 0:
             //cancel
             return;
@@ -386,6 +402,13 @@ void handleGameOverView(Board *board){
     }
 }
 void handleAnalysisView(Board *board){
+    Button saveButton = {
+        .x = 8*45,
+        .y = 7*45,
+        .w = 4*45,
+        .h = 45
+    };
+
     //Render view
     renderAnalysisView(board);
     SDL_RenderPresent(board->renderer);
@@ -423,6 +446,13 @@ void handleAnalysisView(Board *board){
                     return;
                 }
             }
+        }
+
+        //Check if clicked on save button
+        int clicked;
+        if(processEvent(&saveButton, 1, &ev, &clicked)){
+            //Pressed button
+            handleSaveView(board);
         }
 
         //Update mouse and render
