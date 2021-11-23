@@ -396,7 +396,10 @@ void handleGameOverView(Board *board){
     SDL_RenderPresent(board->renderer);
 
     int buttonPressed = waitForButtonPress(buttons, 2);
-    if(buttonPressed == 1){
+    if(buttonPressed == -1){
+        //Quit
+        board->quit = true;
+    }else if(buttonPressed == 1){
         //Clicked save button
         handleSaveView(board);
     }

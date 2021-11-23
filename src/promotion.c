@@ -1,5 +1,6 @@
 #include "promotion.h"
 #include "graphics.h"
+#include "views.h"
 #include "debugmalloc.h"
 
 void drawPicker(Board *board){
@@ -45,12 +46,21 @@ Piece getChoice(Board *board){
         case SDL_USEREVENT:
             //Tick clock
             timeUp = updateCorrectClock(board);
+            renderPlayView(board);
+            drawPicker(board);  //Also calls render present
             break;
         case SDL_QUIT:
             //Quit
             board->quit = true;
             break;
         }
+    }
+
+    //If time is up, set flags
+    if(timeUp){
+        board->gameOver = true;
+        board->draw = false;
+        board->whiteWon = !board->nextIsWhite;
     }
 
     //Return invalid piece on error
