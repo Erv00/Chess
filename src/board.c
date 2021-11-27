@@ -8,10 +8,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <econio.h>
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
-//Starts a new game
 Board* newGameFromStart(SDL_Renderer *renderer, int time){
     Board *board =  newGameFromFen(START_FEN, renderer);
     board->hasReplayData = true;
@@ -19,53 +17,6 @@ Board* newGameFromStart(SDL_Renderer *renderer, int time){
     board->blackClock = newClock(time, renderer, false);
     board->originalTime = time;
     return board;
-}
-
-//Prints the board
-void printBoard(Board *board){
-    econio_clrscr();
-    printf(" abcdefgh\n");
-    for(int rank = 7; rank >= 0; rank--){
-        printf("%d", rank+1);
-        for(int file = 0; file < 8; file++){
-            Piece p = board->cell[rank][file];
-            if(isValidPiece(p)){
-                printf(getPieceFace(p));
-            } else {
-                printf(" ");
-            }
-        }
-        printf("%d\n",rank+1);
-    }
-    printf(" abcdefgh\n");
-
-        econio_gotoxy(11,0);
-    if(isValidSquare(board->enPassante)){
-        char alg[3] = {0};
-        squareToAlgebraic(board->enPassante, alg);
-        printf("En passante: %s\n", alg);
-    }else{
-        printf("En passante: -\n");
-    }
-
-    //Check
-    CheckDataByColor cd = isBoardInCheck(board);
-    econio_gotoxy(11,1);
-    printf("White is %sin check\n", cd.white.inCheck ? "" : "not ");
-    econio_gotoxy(11,2);
-    printf("Black is %sin check\n", cd.black.inCheck ? "" : "not ");
-    econio_gotoxy(11,3);
-    printf("Half moves %d, Full moves %d\n", board->halfmoveClock, board->fullmoveCounter);
-    econio_gotoxy(11,4);
-    printf("%s to move\n", board->nextIsWhite ? "White" : "Black");
-    econio_gotoxy(11, 5);
-    char cast[5] = {0};
-    getCastlingString(board, cast);
-    printf("Castling: %s\n", cast);
-    if(board->checkmate)
-            printf("CHECKMATE\n");
-
-    econio_gotoxy(0,11);
 }
 
 void checkBoardStatus(Board *board){

@@ -2,25 +2,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include "debugmalloc.h"
-
-static const char* PIECE_FACES[] = {
-    //WHITE
-    "♙",
-    "♖",
-    "♘",
-    "♗",
-    "♕",
-    "♔",
-
-    //BLACK
-    "♟︎",
-    "♜",
-    "♞",
-    "♝",
-    "♛",
-    "♚"
-};
+#include <debugmalloc.h>
 
 bool isBlack(Piece p){
     return (p & 24) == COLOR_BLACK;
@@ -49,19 +31,6 @@ bool isKing(Piece p){
 bool isValidPiece(Piece p){
     return p & (COLOR_BLACK | COLOR_WHITE);
 }
-
-const char* getPieceFace(Piece p){
-    char offset = isBlack(p) ? 6 : 0;
-    Piece pCode = p & 7;
-    for(unsigned int i = 0;i < 7;i++){
-        if(pCode == i){
-            return PIECE_FACES[i+offset];
-        }
-    }
-    fprintf(stderr, "No such piece: %d\n", p);
-    return "X";
-}
-
 
 static const char PIECE_CHAR[] = {'P', 'R', 'N', 'B', 'Q', 'K'};
 

@@ -87,9 +87,6 @@ bool isKing(Piece p);
  */
 bool isValidPiece(Piece p);
 
-//Returnes the string to print for a piece
-const char* getPieceFace(Piece p);
-
 /**
  * @brief Megadja egy adott bábu algebrai notációban megjelenő karaktert
  * 

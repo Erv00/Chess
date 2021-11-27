@@ -60,9 +60,6 @@ typedef struct Board {
  */
 Board* newGameFromStart(SDL_Renderer *renderer, int time);
 
-//Prints the board
-void printBoard(Board *board);
-
 /**
  * @brief Ellenőrzi, és frissíti a tábla állapotát (50 lépés, sakk(matt) 
  * @param board Az ellenőrizendő tábla

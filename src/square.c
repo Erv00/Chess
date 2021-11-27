@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 bool isValidSquare(Square square){
     return  (0 <= square.rank && square.rank < 8) &&

@@ -2,7 +2,7 @@
 #include "board.h"
 #include "moves.h"
 #include "views.h"
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 bool wasDragAndDrop(SDL_Event *event, MouseState ms){
     if(event->type != SDL_MOUSEBUTTONUP)

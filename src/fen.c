@@ -6,7 +6,7 @@
 #include "piece.h"
 #include "algebraic.h"
 
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 const char* processFENPieceData(Board *board, const char *fenStr){
     //Pieces

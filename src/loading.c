@@ -1,6 +1,6 @@
 #include "loading.h"
 
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 ReplayNode* parseMoveStr(const char *moveStr, Board *board){
     ReplayNode *node = malloc(sizeof(ReplayNode));
@@ -216,8 +216,6 @@ Board* loadMoves(const char *path, SDL_Renderer *renderer){
         //Update board status
         board->checkmate = node->isCheckmate;
         board->nextIsWhite = !board->nextIsWhite;
-
-        printBoard(board);
     }
 
     if(board->replayData.length == 0){

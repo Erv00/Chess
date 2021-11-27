@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 static SDL_Texture *PIECE_GRAPHICS[12] = {NULL};
 //[0] is normal (16) font, [1] is win font (42)

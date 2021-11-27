@@ -5,7 +5,7 @@
 #include "board.h"
 #include "algebraic.h"
 #include "graphics.h"
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 #include "fen.h"
 #include "loading.h"
 

@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "debugmalloc.h"
+#include <debugmalloc.h>
 
 CheckData isOpponentInCheck(Board *board){
     CheckData cd = {0};
