@@ -180,8 +180,12 @@ Board* loadMoves(const char *path, SDL_Renderer *renderer){
     char fen[90]; //Bit extra for the longest possible fen string
     fgets(fen, 90, saveFile);
     //Get original time
-    int origTime;
-    fscanf(saveFile, "%d", &origTime);
+    int origTime, test;
+    if(fscanf(saveFile, "%d;%d", &origTime, &test) != 1){
+        //Could read second, saved for continuing
+        fprintf(stderr, "File saved for continuing, not for analysis\n");
+        return NULL;
+    }
     Board *board = newGameFromStart(renderer, origTime);
 
     //While not empty parse string

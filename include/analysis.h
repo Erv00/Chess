@@ -94,12 +94,12 @@ void appendPointerToList(ReplayList *list, ReplayNode *node);
 void deleteList(ReplayList *list);
 
 /**
- * @brief Felszabadítja a megadott elem utáni összes elemet
+ * @brief Felszabadítja a lista last elemében mutatott utáni listákat
+ * A last eleme a listának nem feltétlen az utolsó eleme, a megjelenítés utolsó eleme
  * 
  * @param list A megadott lista
- * @param node A lépés ami utáni lépéseket fell kell szabadítani
  */
-void freeListAfter(ReplayList *list,ReplayNode *node);
+void freeAfterList(ReplayList *list);
 
 /**
  * @brief Meghatározza egy lépésről, hogy a kiindulási pozíció egyértelműen meghatározható-e
@@ -120,7 +120,6 @@ void nodeToString(ReplayNode *node, char *out);
 
 /**
  * @brief Megrajzolja az adott lépés textúráját, ha még nem létezik
- * @todo Include step number here if possible
  * @param node A rajzolandó lépés
  * @param renderer A használt renderer
  */

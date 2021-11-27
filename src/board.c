@@ -73,13 +73,17 @@ void checkBoardStatus(Board *board){
     //Check for checkmate
     CheckDataByColor cd = isBoardInCheck(board);
     if(cd.white.inCheck || cd.black.inCheck){
-        node->isCheck = true;
+        //Node can be null if board has no replay data
+        if(node != NULL)
+            node->isCheck = true;
         if(isCheckmate(board)){
             board->checkmate = true;
             board->gameOver = true;
             board->whiteWon = !board->nextIsWhite;
 
-            node->isCheckmate = true;
+            //Node can be null if board has no replay data
+            if(node != NULL)
+                node->isCheckmate = true;
         }
     }
 
@@ -94,14 +98,14 @@ void checkBoardStatus(Board *board){
 void saveWithoutMoves(const char *path, Board *board){
     FILE *saveFile = fopen(path, "w");
     if(saveFile == NULL){
-        fprintf(stderr,"Failed to open savefile %s. Aborting\n", path);
-        exit(-1);
+        fprintf(stderr,"Failed to open savefile %s\n", path);
+        return;
     }
 
     //Save position
     char *fen = saveAsFEN(board);
-    //Save original time
-    fprintf(saveFile, "%s\n%d\n", fen, board->originalTime);
+    //Save clock times
+    fprintf(saveFile, "%s\n%d;%d\n", fen, board->whiteClock.secondsRemaining, board->blackClock.secondsRemaining);
     free(fen);
     //Close file
     fclose(saveFile);
@@ -110,19 +114,29 @@ void saveWithoutMoves(const char *path, Board *board){
 Board* loadWithoutMoves(const char *path, SDL_Renderer *renderer){
     FILE *saveFile = fopen(path, "r");
     if(saveFile == NULL){
-        fprintf(stderr, "Failed to open savefile %s. Aborting\n", path);
-        exit(-1);
-        abort();
+        fprintf(stderr, "Failed to open savefile %s\n", path);
+        return NULL;
     }
 
     char fen[90]; //Bit extra for the longest possible fen string
     fgets(fen, 90, saveFile);
-    Board *board = newGameFromFen(fen, renderer);
 
     //Get time
-    fscanf(saveFile, "%d", &board->originalTime);
-    board->whiteClock.secondsRemaining = board->originalTime;
-    board->blackClock.secondsRemaining = board->originalTime;
+    int whiteTime, blackTime;
+    int scanned = fscanf(saveFile, "%d;%d", &whiteTime, &blackTime);
+    if(scanned != 2){
+        //Not saved for continuing
+        fprintf(stderr, "File not saved for continuing\n");
+        return NULL;
+    }
+
+    Board *board = newGameFromFen(fen, renderer);
+    board->whiteClock.secondsRemaining = whiteTime;
+    board->blackClock.secondsRemaining = blackTime;
+    
+    //Update clock textures
+    updateClockTexture(&board->whiteClock);
+    updateClockTexture(&board->blackClock);
 
     fclose(saveFile);
 

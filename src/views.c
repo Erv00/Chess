@@ -244,11 +244,19 @@ bool handleLoadView(SDL_Renderer *renderer){
     switch(waitForButtonPress(buttons, 3)){
         case 0: //Continue
             board = loadWithoutMoves(SAVE_PATH, renderer);
+            if(board == NULL){
+                //Not saved for cont
+                return false;
+            }
             board->renderer = renderer;
             handlePlayView(board);
             break;
         case 1: //Analysis
             board = loadMoves(SAVE_PATH, renderer);
+            if(board == NULL){
+                //Saced for cont
+                return false;
+            }
             board->renderer = renderer;
             handleAnalysisView(board);
             break;
@@ -258,8 +266,8 @@ bool handleLoadView(SDL_Renderer *renderer){
     }
     bool quit = false;
     if(board != NULL){
-        destroyBoard(board);
         quit = board->quit;
+        destroyBoard(board);
     }
     return quit;
 }
@@ -362,7 +370,12 @@ void handleSaveView(Board *board){
             return;
         case 1:
             //Save with path
-            saveWithMoves(SAVE_PATH, board);
+            //Check if has path data
+            if(board->hasReplayData)
+                saveWithMoves(SAVE_PATH, board);
+            else
+                fprintf(stderr, "Board not loaded with path data, cannot save with it\n");
+            
             break;
         case 2:
             //Normal save
@@ -439,7 +452,7 @@ void handleAnalysisView(Board *board){
                 if(isValidMove(board, m, NULL, NULL, NULL)){
                     //Drag&dropped a valid piece => start game from here
                     //Free moves after current move
-                    freeListAfter(&board->replayData, board->replayData.last);
+                    freeAfterList(&board->replayData);
 
                     //Make move
                     movePieceWithCheck(board, m);

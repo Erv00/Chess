@@ -95,8 +95,9 @@ void movePieceWithCheck(Board *board, Move move){
     }
     movePiece(board, move);
 
-    //Push to list, last element will be modified by checkBoardStatus to reflect check and checkmate data
-    appendToList(&board->replayData, rNode);
+    //Push to list if needed, last element will be modified by checkBoardStatus to reflect check and checkmate data
+    if(board->hasReplayData)
+        appendToList(&board->replayData, rNode);
 
     board->nextIsWhite = !board->nextIsWhite;
     checkBoardStatus(board);

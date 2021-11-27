@@ -61,7 +61,8 @@ void deleteList(ReplayList *list){
     list->length = 0;
 }
 
-void freeListAfter(ReplayList *list,ReplayNode *node){
+void freeAfterList(ReplayList *list){
+    ReplayNode *node = list->last;
     if(node == NULL){
         //Stepped back until start, free from beginning
         deleteList(list);
@@ -73,7 +74,6 @@ void freeListAfter(ReplayList *list,ReplayNode *node){
         ReplayNode *next = head->next;
         free(head);
         head = next;
-        list->length -= 1;
     }
     node->next = NULL;
 }

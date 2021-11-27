@@ -72,14 +72,14 @@ void checkBoardStatus(Board *board);
 /**
  * @brief Elmenti a táblát FEN notációban
  * 
- * @param path 
- * @param board 
+ * @param path A mentés helye
+ * @param board A mentendő tábla
  */
 void saveWithoutMoves(const char *path, Board *board);
 
 /**
  * @brief Betölt egy játékállást
- * 
+ * Ha a mentett fájl analízishez készült, NULL-t ad vissza
  * @param path A betöltendő fájl elérési útja
  * @param renderer A tábla renderere
  * @return Board* Egy tábla amely a megfelelő állásban van

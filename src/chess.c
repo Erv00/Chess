@@ -1,29 +1,37 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include "board.h"
 #include "moves.h"
 #include "algebraic.h"
+#include "check.h"
+#include "graphics.h"
+#include "mouse.h"
+#include "views.h"
+
+#include "promotion.h"
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include "debugmalloc.h"
 
 int main(void){
-    Move m;
-    char moveData[4];
+    //Initialization
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    initGraphics(&window, &renderer);
 
-    Board *b = newGameFromStart();
-    printBoard(b);
-    while(true){
-        scanf("%2s %2s", moveData, moveData+2);
-        while (getchar() != '\n');
-        if(*moveData == 'q'){
-            return 0;
-        }
-        m.from = algebraicToSquare(moveData);
-        m.to = algebraicToSquare(moveData+2);
-        if(isValidMove(b, m, NULL, NULL, NULL)){
-            movePieceWithCheck(b, m);
-            printBoard(b);
-            b->nextIsWhite = !b->nextIsWhite;
-        }else{
-            printf("Invalid move\n");
-        }
-    }
+    //Game loop
+    while(!handleMenuView(renderer));
+    
+    //Free resources
+    IMG_Quit();
+    unloadPieces();
+    unloadMenuTextures();
+    unloadFonts();
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
 }
